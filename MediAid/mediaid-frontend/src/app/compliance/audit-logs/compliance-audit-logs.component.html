@@ -1,0 +1,48 @@
+<div class="page-header">
+  <h2 class="page-title">Audit Logs</h2>
+  <p class="page-sub">Full activity log across the platform</p>
+</div>
+
+<div class="section-card">
+  <div class="toolbar">
+    <mat-form-field appearance="outline">
+      <mat-label>Filter by Action</mat-label>
+      <input matInput [(ngModel)]="actionFilter" placeholder="e.g. CREATE, UPDATE">
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Filter by Resource</mat-label>
+      <input matInput [(ngModel)]="resourceFilter" placeholder="e.g. CLAIM:42">
+    </mat-form-field>
+    <button mat-flat-button color="primary" (click)="applyFilter()">Filter</button>
+    <button mat-button (click)="clear()">Clear</button>
+    <button mat-stroked-button (click)="exportCSV()">
+      <mat-icon>download</mat-icon> Export CSV
+    </button>
+  </div>
+
+  <div class="center" *ngIf="loading"><mat-spinner diameter="40"></mat-spinner></div>
+
+  <!-- 403 access denied -->
+  <div class="access-denied-banner" *ngIf="accessDenied && !loading">
+    <mat-icon>lock_outline</mat-icon>
+    <div>
+      <strong>Access Restricted</strong>
+      <p>Your role does not have permission to view audit logs. Contact your administrator if you believe this is an error.</p>
+    </div>
+  </div>
+
+  <table mat-table [dataSource]="logs" class="data-table" *ngIf="!loading && !accessDenied && logs.length">
+    <ng-container matColumnDef="logId"><th mat-header-cell *matHeaderCellDef>ID</th><td mat-cell *matCellDef="let l" class="id-cell">#{{ l.logId }}</td></ng-container>
+    <ng-container matColumnDef="userId"><th mat-header-cell *matHeaderCellDef>User ID</th><td mat-cell *matCellDef="let l">{{ l.userId }}</td></ng-container>
+    <ng-container matColumnDef="action"><th mat-header-cell *matHeaderCellDef>Action</th><td mat-cell *matCellDef="let l">{{ l.action }}</td></ng-container>
+    <ng-container matColumnDef="resource"><th mat-header-cell *matHeaderCellDef>Resource</th><td mat-cell *matCellDef="let l">{{ l.resource }}</td></ng-container>
+    <ng-container matColumnDef="details"><th mat-header-cell *matHeaderCellDef>Details</th><td mat-cell *matCellDef="let l">{{ l.details }}</td></ng-container>
+    <ng-container matColumnDef="timestamp"><th mat-header-cell *matHeaderCellDef>Timestamp</th><td mat-cell *matCellDef="let l" class="date-cell">{{ l.timestamp | date:'medium' }}</td></ng-container>
+    <tr mat-header-row *matHeaderRowDef="cols"></tr>
+    <tr mat-row *matRowDef="let row; columns: cols;"></tr>
+  </table>
+
+  <div class="empty-state" *ngIf="!loading && !accessDenied && !logs.length">
+    <mat-icon>history</mat-icon><p>No audit logs found</p>
+  </div>
+</div>

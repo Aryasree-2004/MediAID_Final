@@ -9,7 +9,7 @@ export class ComplianceService {
   private base = `${environment.apiUrl}/api/compliance`;
   constructor(private http: HttpClient) {}
 
-  evaluate(entityId: number, entityType: string, requestedBy: string) {
+  evaluate(entityId: number, entityType: string, requestedBy: number) {
     return this.http.post<ApiResponse<any>>(`${this.base}/evaluate?entityId=${entityId}&entityType=${entityType}&requestedBy=${requestedBy}`, {});
   }
   evaluateFull(payload: ComplianceEvaluationRequest) {

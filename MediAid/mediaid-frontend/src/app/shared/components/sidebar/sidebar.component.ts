@@ -32,13 +32,16 @@ const NAV_MAP: Record<string, NavItem[]> = {
     { label: 'User Management', icon: 'manage_accounts', route: '/admin/users'       },
   ],
   COMPLIANCE: [
-    { label: 'Dashboard',         icon: 'dashboard',     route: '/compliance/dashboard' },
-    { label: 'Compliance Records', icon: 'verified_user', route: '/compliance/records'  },
+    { label: 'Dashboard',          icon: 'dashboard',     route: '/compliance/dashboard'  },
+    { label: 'Compliance Records', icon: 'verified_user', route: '/compliance/records'    },
+    { label: 'Formal Audits',      icon: 'fact_check',    route: '/compliance/audits'     },
+    { label: 'Audit Logs',         icon: 'manage_search', route: '/compliance/audit-logs' },
   ],
   AUDITOR: [
-    { label: 'Dashboard',     icon: 'dashboard',     route: '/auditor/dashboard'  },
-    { label: 'Audit Logs',    icon: 'manage_search', route: '/auditor/audit-logs' },
-    { label: 'Formal Audits', icon: 'fact_check',    route: '/auditor/audits'     },
+    { label: 'Dashboard',          icon: 'dashboard',     route: '/auditor/dashboard'  },
+    { label: 'Compliance Records', icon: 'verified_user', route: '/auditor/compliance' },
+    { label: 'Formal Audits',      icon: 'fact_check',    route: '/auditor/audits'     },
+    { label: 'Audit Logs',         icon: 'manage_search', route: '/auditor/audit-logs' },
   ],
 };
 

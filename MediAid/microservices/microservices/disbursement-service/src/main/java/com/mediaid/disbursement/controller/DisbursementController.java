@@ -31,7 +31,7 @@ public class DisbursementController {
                 .status("SUCCESS").message("Created Disbursement").data(disbursement).build());
     }
 
-    @PreAuthorize("hasAnyRole('CITIZEN', 'OFFICER')")
+    @PreAuthorize("hasAnyRole('CITIZEN', 'OFFICER', 'COMPLIANCE')")
     @GetMapping("/{disbursementId}")
     public ResponseEntity<APIResponse<DisbursementResponseDTO>> getDisbursementById(
             @PathVariable Long disbursementId) {
@@ -59,7 +59,7 @@ public class DisbursementController {
                 .status("SUCCESS").message("Fetched My Disbursements").data(disbursements).build());
     }
 
-    @PreAuthorize("hasRole('OFFICER')")
+    @PreAuthorize("hasAnyRole('OFFICER', 'COMPLIANCE')")
     @GetMapping("/all")
     public ResponseEntity<APIResponse<List<DisbursementResponseDTO>>> getAllDisbursements() {
         List<DisbursementResponseDTO> disbursements = disbursementService.getAllDisbursements();

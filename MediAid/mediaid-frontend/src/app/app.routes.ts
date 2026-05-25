@@ -56,17 +56,20 @@ export const routes: Routes = [
     path: 'auditor',
     canActivate: [authGuard, roleGuard(['AUDITOR'])],
     children: [
-      { path: 'dashboard',  loadComponent: () => import('./dashboard/auditor-dashboard/auditor-dashboard.component').then(m => m.AuditorDashboardComponent) },
-      { path: 'audit-logs', loadComponent: () => import('./auditor/audit-logs/auditor-audit-logs.component').then(m => m.AuditorAuditLogsComponent) },
-      { path: 'audits',     loadComponent: () => import('./manager/formal-audit-management/formal-audit-management.component').then(m => m.FormalAuditManagementComponent) },
+      { path: 'dashboard',   loadComponent: () => import('./dashboard/auditor-dashboard/auditor-dashboard.component').then(m => m.AuditorDashboardComponent) },
+      { path: 'audit-logs',  loadComponent: () => import('./auditor/audit-logs/auditor-audit-logs.component').then(m => m.AuditorAuditLogsComponent) },
+      { path: 'audits',      loadComponent: () => import('./auditor/audits/auditor-audits.component').then(m => m.AuditorAuditsComponent) },
+      { path: 'compliance',  loadComponent: () => import('./auditor/compliance/auditor-compliance.component').then(m => m.AuditorComplianceComponent) },
     ]
   },
   {
     path: 'compliance',
     canActivate: [authGuard, roleGuard(['COMPLIANCE'])],
     children: [
-      { path: 'dashboard', loadComponent: () => import('./dashboard/compliance-dashboard/compliance-dashboard.component').then(m => m.ComplianceDashboardComponent) },
-      { path: 'records',   loadComponent: () => import('./compliance/records/compliance-records.component').then(m => m.ComplianceRecordsComponent) },
+      { path: 'dashboard',   loadComponent: () => import('./dashboard/compliance-dashboard/compliance-dashboard.component').then(m => m.ComplianceDashboardComponent) },
+      { path: 'records',     loadComponent: () => import('./compliance/records/compliance-records.component').then(m => m.ComplianceRecordsComponent) },
+      { path: 'audits',      loadComponent: () => import('./compliance/audits/compliance-audits.component').then(m => m.ComplianceAuditsComponent) },
+      { path: 'audit-logs',  loadComponent: () => import('./compliance/audit-logs/compliance-audit-logs.component').then(m => m.ComplianceAuditLogsComponent) },
     ]
   },
   { path: 'unauthorized', loadComponent: () => import('./shared/components/unauthorized/unauthorized.component').then(m => m.UnauthorizedComponent) },

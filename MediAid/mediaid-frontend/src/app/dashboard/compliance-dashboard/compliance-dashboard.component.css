@@ -49,9 +49,13 @@
   width: 36px; height: 36px; border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
 }
-.qa-icon.blue { background: rgba(99,102,241,0.18); color: #818cf8; }
+.qa-icon.blue  { background: rgba(99,102,241,0.18);  color: #818cf8; }
+.qa-icon.green { background: rgba(16,185,129,0.15);  color: #34d399; }
+.qa-icon.sky   { background: rgba(56,189,248,0.15);  color: #38bdf8; }
 .qa-icon mat-icon { font-size: 20px; height: 20px; width: 20px; }
+.qa-grid-3 { grid-template-columns: repeat(3, 1fr) !important; }
 
 @media (max-width: 900px) {
   .summary-grid, .qa-grid { grid-template-columns: 1fr 1fr; }
+  .qa-grid-3 { grid-template-columns: 1fr 1fr !important; }
 }

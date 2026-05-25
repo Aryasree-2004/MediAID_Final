@@ -40,7 +40,7 @@ public class EnrollmentController {
                 .build());
     }
 
-    @PreAuthorize("hasAnyRole('CITIZEN', 'OFFICER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('CITIZEN', 'OFFICER', 'ADMIN', 'COMPLIANCE')")
     @GetMapping("/{id}")
     public ResponseEntity<APIResponse<EnrollmentResponseDTO>> getEnrollment(@PathVariable Long id) {
 
@@ -67,7 +67,7 @@ public class EnrollmentController {
                 .build());
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'OFFICER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OFFICER', 'COMPLIANCE')")
     @GetMapping("/all")
     public ResponseEntity<APIResponse<List<EnrollmentResponseDTO>>> getAllEnrollments() {
 

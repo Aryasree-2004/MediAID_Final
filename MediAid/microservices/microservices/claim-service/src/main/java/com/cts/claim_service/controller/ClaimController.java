@@ -40,7 +40,7 @@ public class ClaimController {
                 .status("SUCCESS").message("Claim created successfully").data(responseDTO).build());
     }
 
-    @PreAuthorize("hasRole('OFFICER')")
+    @PreAuthorize("hasAnyRole('OFFICER', 'COMPLIANCE')")
     @GetMapping("/{claimId}")
     public ResponseEntity<APIResponse<ClaimResponseDTO>> getClaim(
             @PathVariable Long claimId) throws ResourceNotFoundException {
@@ -69,7 +69,7 @@ public class ClaimController {
                 .status("SUCCESS").message("Claim status updated").data(responseDTO).build());
     }
 
-    @PreAuthorize("hasRole('OFFICER')")
+    @PreAuthorize("hasAnyRole('OFFICER', 'COMPLIANCE')")
     @GetMapping("/all")
     public ResponseEntity<APIResponse<List<ClaimResponseDTO>>> getAllClaims() {
         List<ClaimResponseDTO> dtos = claimService.getAllClaims();

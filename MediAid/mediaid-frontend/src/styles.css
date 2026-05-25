@@ -143,7 +143,51 @@ mat-paginator {
 .mat-mdc-form-field-label, .mat-mdc-floating-label {
   color: rgba(255,255,255,0.4) !important;
 }
-.mat-mdc-select-value { color: var(--text-primary) !important; }
+.mat-mdc-select-value, .mat-mdc-select-value-text { color: var(--text-primary) !important; }
+.mat-mdc-select-placeholder { color: rgba(255,255,255,0.45) !important; }
+.mat-mdc-select-arrow svg { fill: rgba(255,255,255,0.55) !important; }
+
+/* ── Select dropdown panel (options popup) ── */
+.mat-mdc-select-panel,
+.cdk-overlay-pane .mat-mdc-select-panel,
+div.mat-mdc-select-panel {
+  background: var(--surface-1) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: 0 12px 36px rgba(0,0,0,0.55) !important;
+}
+.mat-mdc-option,
+.mat-mdc-option .mdc-list-item__primary-text {
+  color: var(--text-primary) !important;
+}
+.mat-mdc-option:hover:not(.mdc-list-item--disabled),
+.mat-mdc-option.mat-mdc-option-active {
+  background: rgba(99,102,241,0.15) !important;
+}
+.mat-mdc-option.mdc-list-item--selected .mdc-list-item__primary-text {
+  color: #a5b4fc !important;
+}
+.mat-mdc-option.mdc-list-item--selected:not(.mat-mdc-option-multiple) {
+  background: rgba(99,102,241,0.18) !important;
+}
+.mat-mdc-option.mdc-list-item--disabled .mdc-list-item__primary-text {
+  color: rgba(255,255,255,0.35) !important;
+}
+
+/* ── Autocomplete panel (uses similar internals) ── */
+.mat-mdc-autocomplete-panel {
+  background: var(--surface-1) !important;
+  border: 1px solid var(--border) !important;
+}
+
+/* ── Menu (mat-menu) ── */
+.mat-mdc-menu-panel {
+  background: var(--surface-1) !important;
+  border: 1px solid var(--border) !important;
+}
+.mat-mdc-menu-item, .mat-mdc-menu-item .mdc-list-item__primary-text {
+  color: var(--text-primary) !important;
+}
+.mat-mdc-menu-item:hover { background: rgba(99,102,241,0.12) !important; }
 
 /* Buttons */
 .mat-mdc-raised-button.mat-primary,

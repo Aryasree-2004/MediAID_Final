@@ -82,6 +82,17 @@ public class CitizenDocumentController {
         return ResponseEntity.ok(response);
     }
     
+    @PreAuthorize("hasRole('CITIZEN') or hasRole('OFFICER')")
+    @DeleteMapping("/documents/{documentId}")
+    public ResponseEntity<APIResponse<Void>> deleteDocument(@PathVariable long documentId) {
+        citizenDocumentService.deleteDocument(documentId);
+        APIResponse<Void> response = APIResponse.<Void>builder()
+                .status("SUCCESS")
+                .message("Document deleted successfully")
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/documents/{fileName}/download")
     public ResponseEntity<Resource> downloadFile(@PathVariable String fileName) {
         try {

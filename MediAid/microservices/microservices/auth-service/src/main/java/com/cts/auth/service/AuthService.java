@@ -6,6 +6,7 @@ import com.cts.auth.dto.ForgotPasswordRequest;
 import com.cts.auth.dto.LoginRequestDTO;
 import com.cts.auth.dto.RegisterRequestDTO;
 import com.cts.auth.dto.ResetPasswordRequest;
+import com.cts.auth.dto.UserResponseDTO;
 import com.cts.auth.exception.ResourceNotFoundException;
 import com.cts.auth.model.Role;
 import com.cts.auth.model.User;
@@ -18,6 +19,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class AuthService {
@@ -84,6 +87,13 @@ public class AuthService {
         emailService.sendOtpEmail(user.getEmail(), otp);
 
         auditServiceClient.log(user.getUserId(), "FORGOT_PASSWORD", "AuthService");
+    }
+
+    public List<UserResponseDTO> getAllUsers() {
+        return userRepository.findAll().stream()
+                .map(u -> new UserResponseDTO(u.getUserId(), u.getName(), u.getEmail(),
+                        u.getRole() != null ? u.getRole().name() : null))
+                .collect(Collectors.toList());
     }
 
     public void resetPassword(ResetPasswordRequest request) {

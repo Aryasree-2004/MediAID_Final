@@ -1,0 +1,147 @@
+<h2 class="page-title">Compliance Records</h2>
+
+<mat-tab-group>
+
+  <!-- Evaluate tab -->
+  <mat-tab label="Evaluate Entity">
+    <div class="tab-content">
+      <div class="section-card">
+        <h3 class="section-title">Run Compliance Evaluation</h3>
+        <p class="section-sub">Evaluate a CLAIM or ENROLLMENT against the compliance rules engine.</p>
+        <form [formGroup]="evalForm" (ngSubmit)="evaluate()" class="inline-form">
+          <mat-form-field appearance="outline">
+            <mat-label>Entity ID</mat-label>
+            <input matInput formControlName="entityId" type="number">
+            <mat-error>Required</mat-error>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Entity Type</mat-label>
+            <mat-select formControlName="entityType">
+              <mat-option value="CLAIM">Claim</mat-option>
+              <mat-option value="ENROLLMENT">Enrollment</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <button class="btn-submit" type="submit">Evaluate</button>
+        </form>
+
+        <div *ngIf="evalResult" class="eval-result">
+          <div class="eval-header">
+            <span class="eval-label">Result</span>
+            <app-status-badge [status]="evalResult.result"></app-status-badge>
+          </div>
+          <div class="eval-row" *ngIf="evalResult.notes"><span class="lbl">Notes</span><span>{{ evalResult.notes }}</span></div>
+          <div class="eval-row" *ngIf="evalResult.entityId"><span class="lbl">Entity</span><span>{{ evalResult.entityType }} #{{ evalResult.entityId }}</span></div>
+          <div class="eval-row" *ngIf="evalResult.evaluatedAt"><span class="lbl">Evaluated</span><span>{{ evalResult.evaluatedAt | date:'medium' }}</span></div>
+        </div>
+      </div>
+    </div>
+  </mat-tab>
+
+  <!-- All records -->
+  <mat-tab label="All Records">
+    <div class="tab-content">
+      <div class="section-card">
+        <div class="toolbar">
+          <h3 class="section-title">All Compliance Records</h3>
+          <span class="count-badge">{{ all.length }} record(s)</span>
+        </div>
+        <div class="center" *ngIf="loading"><mat-spinner diameter="40"></mat-spinner></div>
+        <table mat-table [dataSource]="all" class="data-table" *ngIf="!loading && all.length">
+          <ng-container matColumnDef="complianceId"><th mat-header-cell *matHeaderCellDef>ID</th><td mat-cell *matCellDef="let r" class="id-cell">#{{ r.complianceId }}</td></ng-container>
+          <ng-container matColumnDef="entityId"><th mat-header-cell *matHeaderCellDef>Entity</th><td mat-cell *matCellDef="let r">{{ r.entityType }} #{{ r.entityId }}</td></ng-container>
+          <ng-container matColumnDef="entityType"><th mat-header-cell *matHeaderCellDef>Type</th><td mat-cell *matCellDef="let r">{{ r.entityType }}</td></ng-container>
+          <ng-container matColumnDef="result"><th mat-header-cell *matHeaderCellDef>Result</th><td mat-cell *matCellDef="let r"><app-status-badge [status]="r.result"></app-status-badge></td></ng-container>
+          <ng-container matColumnDef="notes"><th mat-header-cell *matHeaderCellDef>Notes</th><td mat-cell *matCellDef="let r">{{ r.notes }}</td></ng-container>
+          <ng-container matColumnDef="evaluatedAt"><th mat-header-cell *matHeaderCellDef>Evaluated</th><td mat-cell *matCellDef="let r">{{ r.evaluatedAt | date:'medium' }}</td></ng-container>
+          <tr mat-header-row *matHeaderRowDef="cols"></tr>
+          <tr mat-row *matRowDef="let row; columns: cols;"></tr>
+        </table>
+        <p *ngIf="!loading && !all.length" class="empty">No compliance records yet.</p>
+      </div>
+    </div>
+  </mat-tab>
+
+  <!-- Violations -->
+  <mat-tab label="Violations">
+    <div class="tab-content">
+      <div class="section-card">
+        <div class="toolbar">
+          <h3 class="section-title">Compliance Violations</h3>
+          <span class="count-badge violations">{{ violations.length }} violation(s)</span>
+        </div>
+        <table mat-table [dataSource]="violations" class="data-table" *ngIf="violations.length">
+          <ng-container matColumnDef="complianceId"><th mat-header-cell *matHeaderCellDef>ID</th><td mat-cell *matCellDef="let r" class="id-cell">#{{ r.complianceId }}</td></ng-container>
+          <ng-container matColumnDef="entityId"><th mat-header-cell *matHeaderCellDef>Entity</th><td mat-cell *matCellDef="let r">{{ r.entityType }} #{{ r.entityId }}</td></ng-container>
+          <ng-container matColumnDef="entityType"><th mat-header-cell *matHeaderCellDef>Type</th><td mat-cell *matCellDef="let r">{{ r.entityType }}</td></ng-container>
+          <ng-container matColumnDef="result"><th mat-header-cell *matHeaderCellDef>Result</th><td mat-cell *matCellDef="let r"><app-status-badge [status]="r.result"></app-status-badge></td></ng-container>
+          <ng-container matColumnDef="notes"><th mat-header-cell *matHeaderCellDef>Notes</th><td mat-cell *matCellDef="let r">{{ r.notes }}</td></ng-container>
+          <ng-container matColumnDef="evaluatedAt"><th mat-header-cell *matHeaderCellDef>Evaluated</th><td mat-cell *matCellDef="let r">{{ r.evaluatedAt | date:'medium' }}</td></ng-container>
+          <tr mat-header-row *matHeaderRowDef="cols"></tr>
+          <tr mat-row *matRowDef="let row; columns: cols;"></tr>
+        </table>
+        <p *ngIf="!violations.length" class="empty">No violations.</p>
+      </div>
+    </div>
+  </mat-tab>
+
+  <!-- Flagged -->
+  <mat-tab label="Flagged">
+    <div class="tab-content">
+      <div class="section-card">
+        <div class="toolbar">
+          <h3 class="section-title">Flagged Items</h3>
+          <span class="count-badge flagged">{{ flagged.length }} flagged</span>
+        </div>
+        <table mat-table [dataSource]="flagged" class="data-table" *ngIf="flagged.length">
+          <ng-container matColumnDef="complianceId"><th mat-header-cell *matHeaderCellDef>ID</th><td mat-cell *matCellDef="let r" class="id-cell">#{{ r.complianceId }}</td></ng-container>
+          <ng-container matColumnDef="entityId"><th mat-header-cell *matHeaderCellDef>Entity</th><td mat-cell *matCellDef="let r">{{ r.entityType }} #{{ r.entityId }}</td></ng-container>
+          <ng-container matColumnDef="entityType"><th mat-header-cell *matHeaderCellDef>Type</th><td mat-cell *matCellDef="let r">{{ r.entityType }}</td></ng-container>
+          <ng-container matColumnDef="result"><th mat-header-cell *matHeaderCellDef>Result</th><td mat-cell *matCellDef="let r"><app-status-badge [status]="r.result"></app-status-badge></td></ng-container>
+          <ng-container matColumnDef="notes"><th mat-header-cell *matHeaderCellDef>Notes</th><td mat-cell *matCellDef="let r">{{ r.notes }}</td></ng-container>
+          <ng-container matColumnDef="evaluatedAt"><th mat-header-cell *matHeaderCellDef>Evaluated</th><td mat-cell *matCellDef="let r">{{ r.evaluatedAt | date:'medium' }}</td></ng-container>
+          <tr mat-header-row *matHeaderRowDef="cols"></tr>
+          <tr mat-row *matRowDef="let row; columns: cols;"></tr>
+        </table>
+        <p *ngIf="!flagged.length" class="empty">No flagged items.</p>
+      </div>
+    </div>
+  </mat-tab>
+
+  <!-- Create record -->
+  <mat-tab label="Create Record">
+    <div class="tab-content">
+      <div class="section-card">
+        <h3 class="section-title">Create Compliance Record</h3>
+        <p class="section-sub">Manually record a compliance finding against an entity.</p>
+        <form [formGroup]="recordForm" (ngSubmit)="createRecord()" class="inline-form">
+          <mat-form-field appearance="outline">
+            <mat-label>Entity ID</mat-label>
+            <input matInput formControlName="entityId" type="number">
+            <mat-error>Required</mat-error>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Entity Type</mat-label>
+            <mat-select formControlName="entityType">
+              <mat-option value="CLAIM">Claim</mat-option>
+              <mat-option value="ENROLLMENT">Enrollment</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Result</mat-label>
+            <mat-select formControlName="result">
+              <mat-option value="PASS">Pass</mat-option>
+              <mat-option value="FAIL">Fail</mat-option>
+              <mat-option value="FLAGGED">Flagged</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Notes</mat-label>
+            <textarea matInput formControlName="notes" rows="2" maxlength="500"></textarea>
+          </mat-form-field>
+          <button class="btn-submit" type="submit">Create Record</button>
+        </form>
+      </div>
+    </div>
+  </mat-tab>
+
+</mat-tab-group>

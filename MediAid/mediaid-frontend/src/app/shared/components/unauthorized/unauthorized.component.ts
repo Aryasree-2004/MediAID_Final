@@ -8,14 +8,7 @@ import { AuthService } from '../../../core/services/auth.service';
   selector: 'app-unauthorized',
   standalone: true,
   imports: [MatButtonModule, MatIconModule, RouterModule],
-  template: `
-    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:16px;">
-      <mat-icon style="font-size:64px;height:64px;width:64px;color:#c62828;">lock</mat-icon>
-      <h1 style="margin:0;color:#333;">Access Denied</h1>
-      <p style="color:#666;">You do not have permission to view this page.</p>
-      <button mat-flat-button color="primary" [routerLink]="auth.getDashboardRoute()">Go to Dashboard</button>
-    </div>
-  `
+  templateUrl: './unauthorized.component.html'
 })
 export class UnauthorizedComponent {
   constructor(public auth: AuthService) {}

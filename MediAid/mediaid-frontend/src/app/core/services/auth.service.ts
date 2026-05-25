@@ -48,14 +48,32 @@ export class AuthService {
   getRole() { return localStorage.getItem('role'); }
   getUserId() { return localStorage.getItem('userId'); }
   getUserName() { return localStorage.getItem('userName'); }
-  isLoggedIn() { return !!this.getToken(); }
+  isLoggedIn() {
+    const token = this.getToken();
+    if (!token) return false;
+    if (this.isTokenExpired(token)) { localStorage.clear(); return false; }
+    return true;
+  }
+
+  /** Returns true if the JWT has an `exp` claim that's already past. Malformed tokens are treated as expired. */
+  isTokenExpired(token: string): boolean {
+    try {
+      const payload: any = JSON.parse(atob(token.split('.')[1]));
+      if (!payload.exp) return false;
+      return Date.now() >= payload.exp * 1000;
+    } catch {
+      return true;
+    }
+  }
 
   getDashboardRoute(): string {
     const routes: Record<string, string> = {
       CITIZEN: '/citizen/dashboard',
       OFFICER: '/officer/dashboard',
       MANAGER: '/manager/dashboard',
-      ADMIN: '/admin/dashboard'
+      ADMIN: '/admin/dashboard',
+      COMPLIANCE: '/compliance/dashboard',
+      AUDITOR: '/auditor/dashboard'
     };
     return routes[this.getRole() ?? ''] ?? '/auth/login';
   }

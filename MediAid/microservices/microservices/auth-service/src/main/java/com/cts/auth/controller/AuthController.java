@@ -6,9 +6,12 @@ import com.cts.auth.dto.ForgotPasswordRequest;
 import com.cts.auth.dto.LoginRequestDTO;
 import com.cts.auth.dto.RegisterRequestDTO;
 import com.cts.auth.dto.ResetPasswordRequest;
+import com.cts.auth.dto.UserResponseDTO;
 import com.cts.auth.service.AuthService;
 import jakarta.validation.Valid;
+import java.util.List;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -58,6 +61,17 @@ public class AuthController {
                 .status("SUCCESS")
                 .message("Password reset successfully")
                 .data(null)
+                .build());
+    }
+
+    @GetMapping("/users")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<APIResponse<List<UserResponseDTO>>> listUsers() {
+        List<UserResponseDTO> users = authService.getAllUsers();
+        return ResponseEntity.ok(APIResponse.<List<UserResponseDTO>>builder()
+                .status("SUCCESS")
+                .message("Users fetched successfully")
+                .data(users)
                 .build());
     }
 }

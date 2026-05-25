@@ -12,4 +12,5 @@ public interface CitizenDocumentService {
     CitizenDocumentResponseDTO uploadDocument(long citizenId,CitizenDocumentRequestDTO citizenDocumentRequestDTO) throws ResourceNotFoundException;
     List<CitizenDocumentResponseDTO> getAllDocument(long citizenId) throws ResourceNotFoundException;
     CitizenDocumentResponseDTO verifyDocuments(long documentId, String status) throws BadRequestException, ResourceNotFoundException;
+    void deleteDocument(long documentId) throws ResourceNotFoundException;
 }

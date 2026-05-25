@@ -19,7 +19,6 @@ export const routes: Routes = [
     children: [
       { path: 'dashboard', loadComponent: () => import('./dashboard/citizen-dashboard/citizen-dashboard.component').then(m => m.CitizenDashboardComponent) },
       { path: 'profile', loadComponent: () => import('./citizen/profile/citizen-profile.component').then(m => m.CitizenProfileComponent) },
-      { path: 'documents', loadComponent: () => import('./citizen/documents/citizen-documents.component').then(m => m.CitizenDocumentsComponent) },
       { path: 'enrollments', loadComponent: () => import('./citizen/enrollments/citizen-enrollments.component').then(m => m.CitizenEnrollmentsComponent) },
       { path: 'claims', loadComponent: () => import('./citizen/claims/citizen-claims.component').then(m => m.CitizenClaimsComponent) },
       { path: 'disbursements', loadComponent: () => import('./citizen/disbursements/citizen-disbursements.component').then(m => m.CitizenDisbursementsComponent) },
@@ -35,7 +34,6 @@ export const routes: Routes = [
       { path: 'enrollments', loadComponent: () => import('./officer/enrollment-management/enrollment-management.component').then(m => m.EnrollmentManagementComponent) },
       { path: 'claims', loadComponent: () => import('./officer/claim-management/claim-management.component').then(m => m.ClaimManagementComponent) },
       { path: 'disbursements', loadComponent: () => import('./officer/disbursement-management/disbursement-management.component').then(m => m.DisbursementManagementComponent) },
-      { path: 'compliance', loadComponent: () => import('./officer/compliance-records/compliance-records.component').then(m => m.ComplianceRecordsComponent) },
     ]
   },
   {
@@ -44,8 +42,6 @@ export const routes: Routes = [
     children: [
       { path: 'dashboard', loadComponent: () => import('./dashboard/manager-dashboard/manager-dashboard.component').then(m => m.ManagerDashboardComponent) },
       { path: 'schemes', loadComponent: () => import('./manager/scheme-management/scheme-management.component').then(m => m.SchemeManagementComponent) },
-      { path: 'compliance', loadComponent: () => import('./manager/compliance-management/compliance-management.component').then(m => m.ComplianceManagementComponent) },
-      { path: 'audits', loadComponent: () => import('./manager/formal-audit-management/formal-audit-management.component').then(m => m.FormalAuditManagementComponent) },
     ]
   },
   {
@@ -54,7 +50,23 @@ export const routes: Routes = [
     children: [
       { path: 'dashboard', loadComponent: () => import('./dashboard/admin-dashboard/admin-dashboard.component').then(m => m.AdminDashboardComponent) },
       { path: 'users', loadComponent: () => import('./admin/user-management/user-management.component').then(m => m.UserManagementComponent) },
-      { path: 'audit-logs', loadComponent: () => import('./admin/audit-logs/audit-logs.component').then(m => m.AuditLogsComponent) },
+    ]
+  },
+  {
+    path: 'auditor',
+    canActivate: [authGuard, roleGuard(['AUDITOR'])],
+    children: [
+      { path: 'dashboard',  loadComponent: () => import('./dashboard/auditor-dashboard/auditor-dashboard.component').then(m => m.AuditorDashboardComponent) },
+      { path: 'audit-logs', loadComponent: () => import('./auditor/audit-logs/auditor-audit-logs.component').then(m => m.AuditorAuditLogsComponent) },
+      { path: 'audits',     loadComponent: () => import('./manager/formal-audit-management/formal-audit-management.component').then(m => m.FormalAuditManagementComponent) },
+    ]
+  },
+  {
+    path: 'compliance',
+    canActivate: [authGuard, roleGuard(['COMPLIANCE'])],
+    children: [
+      { path: 'dashboard', loadComponent: () => import('./dashboard/compliance-dashboard/compliance-dashboard.component').then(m => m.ComplianceDashboardComponent) },
+      { path: 'records',   loadComponent: () => import('./compliance/records/compliance-records.component').then(m => m.ComplianceRecordsComponent) },
     ]
   },
   { path: 'unauthorized', loadComponent: () => import('./shared/components/unauthorized/unauthorized.component').then(m => m.UnauthorizedComponent) },

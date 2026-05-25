@@ -1,0 +1,32 @@
+<h2 class="page-title">Audit Logs</h2>
+<p class="page-sub">Audit management logs across the platform</p>
+
+<mat-card>
+  <div class="toolbar">
+    <mat-form-field appearance="outline">
+      <mat-label>Filter by Action</mat-label>
+      <input matInput [(ngModel)]="mgmtActionFilter" placeholder="e.g. CREATE, UPDATE">
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Filter by Resource</mat-label>
+      <input matInput [(ngModel)]="mgmtResourceFilter" placeholder="e.g. CLAIM:42">
+    </mat-form-field>
+    <button mat-flat-button color="primary" (click)="applyMgmtFilter()">Filter</button>
+    <button mat-button (click)="clearMgmt()">Clear</button>
+    <button mat-stroked-button (click)="exportCSV(mgmtLogs, 'audit-mgmt-logs.csv')">
+      <mat-icon>download</mat-icon> Export CSV
+    </button>
+  </div>
+  <div class="center" *ngIf="mgmtLoading"><mat-spinner diameter="40"></mat-spinner></div>
+  <table mat-table [dataSource]="mgmtLogs" class="full-width" *ngIf="!mgmtLoading && mgmtLogs.length">
+    <ng-container matColumnDef="logId"><th mat-header-cell *matHeaderCellDef>ID</th><td mat-cell *matCellDef="let l">{{ l.logId }}</td></ng-container>
+    <ng-container matColumnDef="userId"><th mat-header-cell *matHeaderCellDef>User ID</th><td mat-cell *matCellDef="let l">{{ l.userId }}</td></ng-container>
+    <ng-container matColumnDef="action"><th mat-header-cell *matHeaderCellDef>Action</th><td mat-cell *matCellDef="let l">{{ l.action }}</td></ng-container>
+    <ng-container matColumnDef="resource"><th mat-header-cell *matHeaderCellDef>Resource</th><td mat-cell *matCellDef="let l">{{ l.resource }}</td></ng-container>
+    <ng-container matColumnDef="details"><th mat-header-cell *matHeaderCellDef>Details</th><td mat-cell *matCellDef="let l">{{ l.details }}</td></ng-container>
+    <ng-container matColumnDef="timestamp"><th mat-header-cell *matHeaderCellDef>Timestamp</th><td mat-cell *matCellDef="let l">{{ l.timestamp | date:'medium' }}</td></ng-container>
+    <tr mat-header-row *matHeaderRowDef="mgmtCols"></tr>
+    <tr mat-row *matRowDef="let row; columns: mgmtCols;"></tr>
+  </table>
+  <p *ngIf="!mgmtLoading && !mgmtLogs.length" class="empty">No audit management logs found.</p>
+</mat-card>

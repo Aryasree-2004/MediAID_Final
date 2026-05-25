@@ -18,8 +18,14 @@ import com.cts.service.FileStorageService;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Value;
 
 @Service
 @Validated
@@ -32,6 +38,9 @@ public class CitizenDocumentServiceImpl implements CitizenDocumentService {
     private final FileStorageService fileStorageService;
     private final AuditServiceClient auditServiceClient;
     private final CurrentUserUtil currentUserUtil;
+
+    @Value("${file.upload-dir}")
+    private String uploadDir;
 
     public CitizenDocumentServiceImpl(CitizenDocumentRepository docRepo,
                                       CitizenRepository citizenRepo,
@@ -101,5 +110,26 @@ public class CitizenDocumentServiceImpl implements CitizenDocumentService {
         CitizenDocument verified = docRepo.save(doc);
         auditServiceClient.log(currentUserUtil.getUserId(), "VERIFY", "CitizenDocument");
         return citizenDocumentMapper.toDto(verified);
+    }
+
+    @Override
+    public void deleteDocument(long documentId) throws ResourceNotFoundException {
+        CitizenDocument doc = docRepo.findById(documentId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Document not found with id " + documentId));
+
+        String fileUri = doc.getFileUri();
+        docRepo.delete(doc);
+
+        if (fileUri != null && !fileUri.isBlank()) {
+            try {
+                Path filePath = Paths.get(uploadDir).resolve(fileUri).normalize();
+                Files.deleteIfExists(filePath);
+            } catch (IOException ignored) {
+                // file removal best-effort; DB row is already gone
+            }
+        }
+
+        auditServiceClient.log(currentUserUtil.getUserId(), "DELETE", "CitizenDocument");
     }
 }

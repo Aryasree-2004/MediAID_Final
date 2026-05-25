@@ -42,7 +42,7 @@ public class AuditLogController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','AUDITOR')")
     public ResponseEntity<APIResponse<List<AuditLog>>> getAllLogs() {
         List<AuditLog> logs = auditLogService.getAllLogs();
         return ResponseEntity.ok(APIResponse.<List<AuditLog>>builder()
@@ -53,7 +53,7 @@ public class AuditLogController {
     }
 
     @GetMapping("/{userId}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','AUDITOR')")
     public ResponseEntity<APIResponse<List<AuditLog>>> getLogsByUser(@PathVariable Long userId) {
         List<AuditLog> logs = auditLogService.getLogsByUser(userId);
         return ResponseEntity.ok(APIResponse.<List<AuditLog>>builder()

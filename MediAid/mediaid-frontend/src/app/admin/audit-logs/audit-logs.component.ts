@@ -15,78 +15,8 @@ import { AuditService, AuditManagementService } from '../../core/services/audit.
   selector: 'app-audit-logs',
   standalone: true,
   imports: [CommonModule, FormsModule, MatCardModule, MatButtonModule, MatIconModule, MatTableModule, MatFormFieldModule, MatInputModule, MatTabsModule, MatProgressSpinnerModule],
-  template: `
-    <h2 class="page-title">Audit Logs</h2>
-    <mat-tab-group>
-      <mat-tab label="Basic Audit Logs">
-        <div class="tab-content">
-          <mat-card>
-            <div class="toolbar">
-              <mat-form-field appearance="outline">
-                <mat-label>Filter by User ID</mat-label>
-                <input matInput [(ngModel)]="userIdFilter" type="number" placeholder="Enter user ID">
-              </mat-form-field>
-              <button mat-flat-button color="primary" (click)="filterByUser()">Filter</button>
-              <button mat-button (click)="loadAll()">Clear</button>
-              <button mat-stroked-button (click)="exportCSV(basicLogs, 'audit-logs.csv')">
-                <mat-icon>download</mat-icon> Export CSV
-              </button>
-            </div>
-            <div class="center" *ngIf="basicLoading"><mat-spinner diameter="40"></mat-spinner></div>
-            <table mat-table [dataSource]="basicLogs" class="full-width" *ngIf="!basicLoading && basicLogs.length">
-              <ng-container matColumnDef="logId"><th mat-header-cell *matHeaderCellDef>ID</th><td mat-cell *matCellDef="let l">{{ l.logId }}</td></ng-container>
-              <ng-container matColumnDef="userId"><th mat-header-cell *matHeaderCellDef>User ID</th><td mat-cell *matCellDef="let l">{{ l.userId }}</td></ng-container>
-              <ng-container matColumnDef="action"><th mat-header-cell *matHeaderCellDef>Action</th><td mat-cell *matCellDef="let l">{{ l.action }}</td></ng-container>
-              <ng-container matColumnDef="resource"><th mat-header-cell *matHeaderCellDef>Resource</th><td mat-cell *matCellDef="let l">{{ l.resource }}</td></ng-container>
-              <ng-container matColumnDef="timestamp"><th mat-header-cell *matHeaderCellDef>Timestamp</th><td mat-cell *matCellDef="let l">{{ l.timestamp | date:'medium' }}</td></ng-container>
-              <tr mat-header-row *matHeaderRowDef="basicCols"></tr>
-              <tr mat-row *matRowDef="let row; columns: basicCols;"></tr>
-            </table>
-            <p *ngIf="!basicLoading && !basicLogs.length" class="empty">No audit logs found.</p>
-          </mat-card>
-        </div>
-      </mat-tab>
-      <mat-tab label="Audit Management Logs">
-        <div class="tab-content">
-          <mat-card>
-            <div class="toolbar">
-              <mat-form-field appearance="outline">
-                <mat-label>Filter by Action</mat-label>
-                <input matInput [(ngModel)]="actionFilter" placeholder="e.g. CREATE, UPDATE">
-              </mat-form-field>
-              <button mat-flat-button color="primary" (click)="filterByAction()">Filter</button>
-              <button mat-button (click)="loadMgmtLogs()">Clear</button>
-              <button mat-stroked-button (click)="exportCSV(mgmtLogs, 'audit-mgmt-logs.csv')">
-                <mat-icon>download</mat-icon> Export CSV
-              </button>
-            </div>
-            <div class="center" *ngIf="mgmtLoading"><mat-spinner diameter="40"></mat-spinner></div>
-            <table mat-table [dataSource]="mgmtLogs" class="full-width" *ngIf="!mgmtLoading && mgmtLogs.length">
-              <ng-container matColumnDef="logId"><th mat-header-cell *matHeaderCellDef>ID</th><td mat-cell *matCellDef="let l">{{ l.logId }}</td></ng-container>
-              <ng-container matColumnDef="userId"><th mat-header-cell *matHeaderCellDef>User ID</th><td mat-cell *matCellDef="let l">{{ l.userId }}</td></ng-container>
-              <ng-container matColumnDef="action"><th mat-header-cell *matHeaderCellDef>Action</th><td mat-cell *matCellDef="let l">{{ l.action }}</td></ng-container>
-              <ng-container matColumnDef="resource"><th mat-header-cell *matHeaderCellDef>Resource</th><td mat-cell *matCellDef="let l">{{ l.resource }}</td></ng-container>
-              <ng-container matColumnDef="details"><th mat-header-cell *matHeaderCellDef>Details</th><td mat-cell *matCellDef="let l">{{ l.details }}</td></ng-container>
-              <ng-container matColumnDef="timestamp"><th mat-header-cell *matHeaderCellDef>Timestamp</th><td mat-cell *matCellDef="let l">{{ l.timestamp | date:'medium' }}</td></ng-container>
-              <tr mat-header-row *matHeaderRowDef="mgmtCols"></tr>
-              <tr mat-row *matRowDef="let row; columns: mgmtCols;"></tr>
-            </table>
-            <p *ngIf="!mgmtLoading && !mgmtLogs.length" class="empty">No audit management logs found.</p>
-          </mat-card>
-        </div>
-      </mat-tab>
-    </mat-tab-group>
-  `,
-  styles: [`
-    .page-title { margin: 0 0 20px; font-size: 1.6rem; font-weight: 800; color: #f1f5f9; }
-    .tab-content { padding: 16px 0; }
-    mat-card { padding: 24px; }
-    .toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
-    .toolbar mat-form-field { width: 220px; }
-    .center { display: flex; justify-content: center; padding: 32px; }
-    .full-width { width: 100%; }
-    .empty { color: rgba(255,255,255,0.3); padding: 20px 0; font-size: 14px; }
-  `]
+  templateUrl: './audit-logs.component.html',
+  styleUrl: './audit-logs.component.css'
 })
 export class AuditLogsComponent implements OnInit {
   basicLogs: any[] = [];
@@ -105,16 +35,16 @@ export class AuditLogsComponent implements OnInit {
   loadAll() {
     this.basicLoading = true;
     this.auditSvc.getAll().subscribe({
-      next: r => { this.basicLoading = false; if (r.data) this.basicLogs = r.data; },
-      error: () => { this.basicLoading = false; }
+      next: r => { this.basicLoading = false; this.basicLogs = r.data ?? []; },
+      error: () => { this.basicLoading = false; this.basicLogs = []; }
     });
   }
 
   loadMgmtLogs() {
     this.mgmtLoading = true;
     this.auditMgmtSvc.getLogs().subscribe({
-      next: r => { this.mgmtLoading = false; if (r.data) this.mgmtLogs = r.data; },
-      error: () => { this.mgmtLoading = false; }
+      next: r => { this.mgmtLoading = false; this.mgmtLogs = r.data ?? []; },
+      error: () => { this.mgmtLoading = false; this.mgmtLogs = []; }
     });
   }
 
@@ -122,8 +52,8 @@ export class AuditLogsComponent implements OnInit {
     if (!this.userIdFilter) { this.loadAll(); return; }
     this.basicLoading = true;
     this.auditSvc.getByUser(this.userIdFilter).subscribe({
-      next: r => { this.basicLoading = false; if (r.data) this.basicLogs = r.data; },
-      error: () => { this.basicLoading = false; }
+      next: r => { this.basicLoading = false; this.basicLogs = r.data ?? []; },
+      error: () => { this.basicLoading = false; this.basicLogs = []; }
     });
   }
 
@@ -131,17 +61,21 @@ export class AuditLogsComponent implements OnInit {
     if (!this.actionFilter) { this.loadMgmtLogs(); return; }
     this.mgmtLoading = true;
     this.auditMgmtSvc.getLogsByAction(this.actionFilter).subscribe({
-      next: r => { this.mgmtLoading = false; if (r.data) this.mgmtLogs = r.data; },
-      error: () => { this.mgmtLoading = false; }
+      next: r => { this.mgmtLoading = false; this.mgmtLogs = r.data ?? []; },
+      error: () => { this.mgmtLoading = false; this.mgmtLogs = []; }
     });
   }
 
   exportCSV(data: any[], filename: string) {
     if (!data.length) return;
-    const headers = Object.keys(data[0]).join(',');
-    const rows = data.map(row => Object.values(row).map(v => `"${v}"`).join(','));
-    const csv = [headers, ...rows].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
+    const escape = (v: any) => {
+      const s = v === null || v === undefined ? '' : String(v);
+      return `"${s.replace(/"/g, '""')}"`;
+    };
+    const headers = Object.keys(data[0]).map(escape).join(',');
+    const rows = data.map(row => Object.values(row).map(escape).join(','));
+    const csv = [headers, ...rows].join('\r\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url; a.download = filename; a.click();

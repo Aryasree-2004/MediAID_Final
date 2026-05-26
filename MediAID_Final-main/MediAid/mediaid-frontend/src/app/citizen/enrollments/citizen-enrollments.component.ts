@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -45,7 +45,8 @@ export class CitizenEnrollmentsComponent implements OnInit {
     private schemeSvc: SchemeService,
     private citizenSvc: CitizenService,
     private auth: AuthService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
@@ -56,10 +57,12 @@ export class CitizenEnrollmentsComponent implements OnInit {
         this.hasProfile = !!(r.data);
         this.citizenStatus = r.data?.status || '';
         if (this.citizenStatus === 'VERIFIED') this.load();
+        this.cdr.markForCheck();
       },
       error: () => {
         this.profileLoading = false;
         this.hasProfile = false;
+        this.cdr.markForCheck();
       }
     });
   }
@@ -78,6 +81,7 @@ export class CitizenEnrollmentsComponent implements OnInit {
       if (this.schemes.length === 0) this.schemes = allSchemes;
       this.loading = false;
       this.schemesLoading = false;
+      this.cdr.markForCheck();
     });
   }
 
@@ -93,8 +97,9 @@ export class CitizenEnrollmentsComponent implements OnInit {
         this.showDialog = false;
         this.enrollForm.reset();
         this.load();
+        this.cdr.markForCheck();
       },
-      error: () => this.toastr.error('Could not submit enrollment.')
+      error: () => { this.toastr.error('Could not submit enrollment.'); this.cdr.markForCheck(); }
     });
   }
 }

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef, HostListener, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, HostListener, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpEventType } from '@angular/common/http';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
@@ -65,7 +65,8 @@ export class CitizenProfileComponent implements OnInit, OnDestroy {
     private citizenSvc: CitizenService,
     private auth: AuthService,
     private refresh: RefreshService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
@@ -74,8 +75,9 @@ export class CitizenProfileComponent implements OnInit, OnDestroy {
       next: r => {
         this.loading = false;
         if (r.data) { this.citizen = r.data; this.loadDocs(); }
+        this.cdr.markForCheck();
       },
-      error: () => { this.loading = false; }
+      error: () => { this.loading = false; this.cdr.markForCheck(); }
     });
 
     // Auto-refresh document statuses every 20s so officer verifications appear without manual refresh.
@@ -143,8 +145,9 @@ export class CitizenProfileComponent implements OnInit, OnDestroy {
         this.editing = false;
         this.toastr.success(isUpdate ? 'Profile updated!' : 'Profile created! You can now upload supporting documents below.');
         if (!isUpdate) this.loadDocs();
+        this.cdr.markForCheck();
       },
-      error: () => { this.saving = false; }
+      error: () => { this.saving = false; this.cdr.markForCheck(); }
     });
   }
 
@@ -152,8 +155,8 @@ export class CitizenProfileComponent implements OnInit, OnDestroy {
     if (!this.citizen) return;
     if (!silent) this.docsLoading = true;
     this.citizenSvc.getDocuments(this.citizen.citizenId).subscribe({
-      next: r => { this.docsLoading = false; this.documents = r.data ?? []; },
-      error: () => { this.docsLoading = false; }
+      next: r => { this.docsLoading = false; this.documents = r.data ?? []; this.cdr.markForCheck(); },
+      error: () => { this.docsLoading = false; this.cdr.markForCheck(); }
     });
   }
 
@@ -196,11 +199,13 @@ export class CitizenProfileComponent implements OnInit, OnDestroy {
           this.toastr.success('Document uploaded!');
           this.loadDocs();
         }
+        this.cdr.markForCheck();
       },
       error: () => {
         this.uploading = false;
         this.uploadProgress = 0;
         if (this.fileInput?.nativeElement) this.fileInput.nativeElement.value = '';
+        this.cdr.markForCheck();
       },
       complete: () => {
         this.uploading = false;
@@ -220,7 +225,7 @@ export class CitizenProfileComponent implements OnInit, OnDestroy {
     ref.afterClosed().subscribe(confirmed => {
       if (!confirmed) return;
       this.citizenSvc.deleteDocument(doc.documentId).subscribe({
-        next: () => { this.toastr.success('Document removed.'); this.loadDocs(); }
+        next: () => { this.toastr.success('Document removed.'); this.loadDocs(); this.cdr.markForCheck(); }
       });
     });
   }
@@ -233,8 +238,9 @@ export class CitizenProfileComponent implements OnInit, OnDestroy {
         const a = document.createElement('a');
         a.href = url; a.download = this.originalFileName(fileUri); a.click();
         URL.revokeObjectURL(url);
+        this.cdr.markForCheck();
       },
-      error: () => this.toastr.error('Download failed. Please try again.')
+      error: () => { this.toastr.error('Download failed. Please try again.'); this.cdr.markForCheck(); }
     });
   }
 

@@ -32,38 +32,69 @@
               </mat-select>
             </mat-form-field>
           </div>
-          <button class="btn-new" (click)="showCreateForm = !showCreateForm">
+          <button class="btn-new" (click)="toggleAuditForm()">
             <mat-icon>add</mat-icon> New Audit
           </button>
         </div>
 
-        <!-- Create form (toggle) -->
+        <!-- ── Create form (toggle) ── -->
         <form *ngIf="showCreateForm" [formGroup]="auditForm" (ngSubmit)="createAudit()" class="audit-form">
-          <mat-form-field appearance="outline">
-            <mat-label>Officer ID</mat-label>
-            <input matInput formControlName="officerId" type="number">
-            <mat-error>Required</mat-error>
-          </mat-form-field>
+
+          <!-- Scope dropdown — triggers entity fetch on change -->
           <mat-form-field appearance="outline">
             <mat-label>Scope</mat-label>
-            <mat-select formControlName="scope">
+            <mat-select formControlName="scope" (selectionChange)="onAuditScopeChange()">
               <mat-option value="CLAIM">Claim</mat-option>
               <mat-option value="POLICY">Policy</mat-option>
               <mat-option value="DISBURSEMENT">Disbursement</mat-option>
             </mat-select>
           </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Scope Entity ID</mat-label>
-            <input matInput formControlName="scopeEntityId" type="number">
-            <mat-error>Required</mat-error>
-          </mat-form-field>
+
+          <!-- Entity picker — full width row below scope/findings fields -->
+          <div class="audit-entity-section">
+            <div class="ae-label">Select a record</div>
+
+            <!-- Loading spinner -->
+            <div class="ae-center" *ngIf="auditEntitiesLoading">
+              <mat-spinner diameter="32" color="accent"></mat-spinner>
+            </div>
+
+            <!-- Entity list -->
+            <div class="entity-list" *ngIf="!auditEntitiesLoading && auditEntities.length">
+              <div class="entity-row"
+                   *ngFor="let e of auditEntities"
+                   [class.selected]="auditSelectedEntity?.id === e.id"
+                   (click)="auditSelectedEntity = e">
+                <mat-icon class="radio-icon">{{ auditSelectedEntity?.id === e.id ? 'radio_button_checked' : 'radio_button_unchecked' }}</mat-icon>
+                <span class="entity-label">{{ e.label }}</span>
+                <app-status-badge [status]="e.status"></app-status-badge>
+              </div>
+            </div>
+
+            <!-- Error + Retry -->
+            <div class="entity-load-error" *ngIf="auditEntitiesError && !auditEntitiesLoading">
+              <mat-icon>error_outline</mat-icon>
+              <span>Could not load records. Check your connection and try again.</span>
+              <button type="button" class="btn-retry" (click)="onAuditScopeChange()">
+                <mat-icon>refresh</mat-icon> Retry
+              </button>
+            </div>
+
+            <!-- Empty state -->
+            <p class="ae-empty" *ngIf="!auditEntitiesLoading && !auditEntitiesError && !auditEntities.length">
+              No records found for this scope.
+            </p>
+          </div>
+
+          <!-- Findings (optional) -->
           <mat-form-field appearance="outline" style="width:280px">
             <mat-label>Findings (optional)</mat-label>
             <textarea matInput formControlName="findings" rows="2"></textarea>
           </mat-form-field>
+
           <div class="form-btns">
             <button class="btn-submit" type="submit">Create Audit</button>
-            <button class="btn-cancel" type="button" (click)="showCreateForm = false">Cancel</button>
+            <button class="btn-cancel" type="button" (click)="toggleAuditForm()">Cancel</button>
           </div>
         </form>
 

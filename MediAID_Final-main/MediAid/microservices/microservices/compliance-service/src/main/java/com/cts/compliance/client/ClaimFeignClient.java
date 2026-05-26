@@ -15,6 +15,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 @FeignClient(name = "claim-service", fallback = ClaimFeignClientFallback.class)
 public interface ClaimFeignClient {
 
-    @GetMapping("/api/claims/{claimId}")
+    @GetMapping("/api/claims/internal/{claimId}")
     ClaimClientResponseDTO getClaim(@PathVariable("claimId") Long claimId);
 }

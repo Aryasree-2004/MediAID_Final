@@ -1,4 +1,4 @@
-import { Component, ViewEncapsulation, inject } from '@angular/core';
+import { Component, ViewEncapsulation, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -35,7 +35,7 @@ export class RegisterComponent {
     'Browse and enroll in government healthcare schemes',
   ];
 
-  constructor(private auth: AuthService, private router: Router, private toastr: ToastrService) {}
+  constructor(private auth: AuthService, private router: Router, private toastr: ToastrService, private cdr: ChangeDetectorRef) {}
 
   submit() {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
@@ -49,8 +49,9 @@ export class RegisterComponent {
         } else {
           this.toastr.error(res.message || 'Registration failed. Please try again.');
         }
+        this.cdr.markForCheck();
       },
-      error: () => { this.loading = false; }
+      error: () => { this.loading = false; this.cdr.markForCheck(); }
     });
   }
 }

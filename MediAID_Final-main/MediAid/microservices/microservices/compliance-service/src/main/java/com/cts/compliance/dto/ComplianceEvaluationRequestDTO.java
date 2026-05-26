@@ -43,4 +43,14 @@ public class ComplianceEvaluationRequestDTO {
     // ── POLICY fields ─────────────────────────────────────────────────────────
     private LocalDate policyEnrollmentDate;
     private Long citizenId;
+
+    // ── SCHEME fields (populated via SchemeFeignClient enrichment) ────────────
+    /** Scheme's maxCoverageAmount — used as the claim and disbursement ceiling */
+    private Double schemeMaxCoverage;
+
+    /** Scheme's validityYears — used to verify policy duration does not exceed it */
+    private Integer schemeValidityYears;
+
+    /** True when scheme status is ACTIVE — gates all entity-specific rules */
+    private Boolean schemeActive;
 }

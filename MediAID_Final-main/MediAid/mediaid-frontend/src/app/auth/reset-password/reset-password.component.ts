@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, AbstractControl } from '@angular/forms';
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
@@ -28,10 +28,10 @@ export class ResetPasswordComponent implements OnInit {
   loading = false;
   showPw = false;
 
-  constructor(private auth: AuthService, private router: Router, private route: ActivatedRoute, private toastr: ToastrService) {}
+  constructor(private auth: AuthService, private router: Router, private route: ActivatedRoute, private toastr: ToastrService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
-    this.route.queryParams.subscribe(p => { if (p['email']) this.form.patchValue({ email: p['email'] }); });
+    this.route.queryParams.subscribe(p => { if (p['email']) this.form.patchValue({ email: p['email'] }); this.cdr.markForCheck(); });
   }
 
   matchPasswords(g: AbstractControl) {
@@ -47,8 +47,9 @@ export class ResetPasswordComponent implements OnInit {
         this.loading = false;
         this.toastr.success('Password reset successful!');
         this.router.navigate(['/auth/login']);
+        this.cdr.markForCheck();
       },
-      error: () => { this.loading = false; }
+      error: () => { this.loading = false; this.cdr.markForCheck(); }
     });
   }
 }

@@ -38,6 +38,18 @@ public class SchemeController {
                 .status("SUCCESS").message("Scheme retrieved").data(responseDTO).build());
     }
 
+    /**
+     * Internal endpoint — called by compliance-service (and other microservices) via Feign.
+     * Permitted without auth in SecurityConfig under /api/schemes/internal/**.
+     */
+    @GetMapping("/internal/{schemeId}")
+    public ResponseEntity<APIResponse<SchemeResponseDTO>> getSchemeInternal(
+            @PathVariable Long schemeId) {
+        SchemeResponseDTO responseDTO = schemeService.getSchemeById(schemeId);
+        return ResponseEntity.ok(APIResponse.<SchemeResponseDTO>builder()
+                .status("SUCCESS").message("Scheme retrieved internally").data(responseDTO).build());
+    }
+
     @PreAuthorize("hasRole('MANAGER')")
     @PostMapping
     public ResponseEntity<APIResponse<SchemeResponseDTO>> createScheme(

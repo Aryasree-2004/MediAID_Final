@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -52,7 +52,8 @@ export class CitizenClaimsComponent implements OnInit {
     private citizenSvc: CitizenService,
     private enrollSvc: EnrollmentService,
     private auth: AuthService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
@@ -63,10 +64,12 @@ export class CitizenClaimsComponent implements OnInit {
         this.hasProfile = !!(r.data);
         this.citizenStatus = r.data?.status || '';
         if (this.citizenStatus === 'VERIFIED') this.load();
+        this.cdr.markForCheck();
       },
       error: () => {
         this.profileLoading = false;
         this.hasProfile = false;
+        this.cdr.markForCheck();
       }
     });
   }
@@ -94,6 +97,7 @@ export class CitizenClaimsComponent implements OnInit {
       this.schemes = allSchemes.filter((s: any) => eligibleSchemeIds.has(s.schemeId));
       this.loading = false;
       this.claims.forEach(c => this.fetchDocs(c.claimId));
+      this.cdr.markForCheck();
     });
   }
 
@@ -146,10 +150,12 @@ export class CitizenClaimsComponent implements OnInit {
             next: () => {
               this.toastr.success('Claim submitted with document!');
               this.finishSubmit();
+              this.cdr.markForCheck();
             },
             error: () => {
               this.toastr.warning('Claim submitted, but document upload failed. You can attach it later.');
               this.finishSubmit();
+              this.cdr.markForCheck();
             }
           });
         } else {
@@ -169,8 +175,8 @@ export class CitizenClaimsComponent implements OnInit {
 
   private fetchDocs(claimId: number) {
     this.claimSvc.getDocuments(claimId).subscribe({
-      next: r => { this.claimDocs[claimId] = r.data ?? []; },
-      error: () => { this.claimDocs[claimId] = []; }
+      next: r => { this.claimDocs[claimId] = r.data ?? []; this.cdr.markForCheck(); },
+      error: () => { this.claimDocs[claimId] = []; this.cdr.markForCheck(); }
     });
   }
 
@@ -193,8 +199,9 @@ export class CitizenClaimsComponent implements OnInit {
       next: () => {
         this.toastr.success('Document uploaded!');
         this.fetchDocs(claimId);
+        this.cdr.markForCheck();
       },
-      error: () => this.toastr.error('Document upload failed.'),
+      error: () => { this.toastr.error('Document upload failed.'); this.cdr.markForCheck(); },
       complete: () => { input.value = ''; }
     });
   }

@@ -7,63 +7,65 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatTabsModule } from '@angular/material/tabs';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { AuditService, AuditManagementService } from '../../core/services/audit.service';
+import { AuditService } from '../../core/services/audit.service';
 
 @Component({
   selector: 'app-audit-logs',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatCardModule, MatButtonModule, MatIconModule, MatTableModule, MatFormFieldModule, MatInputModule, MatTabsModule, MatProgressSpinnerModule],
+  imports: [
+    CommonModule, FormsModule,
+    MatCardModule, MatButtonModule, MatIconModule,
+    MatTableModule, MatFormFieldModule, MatInputModule,
+    MatProgressSpinnerModule
+  ],
   templateUrl: './audit-logs.component.html',
   styleUrl: './audit-logs.component.css'
 })
 export class AuditLogsComponent implements OnInit {
   basicLogs: any[] = [];
-  mgmtLogs: any[] = [];
+  allBasicLogs: any[] = [];
   basicLoading = true;
-  mgmtLoading = true;
-  userIdFilter: number | null = null;
+  userIdFilter = '';
   actionFilter = '';
-  basicCols = ['logId', 'userId', 'action', 'resource', 'timestamp'];
-  mgmtCols = ['logId', 'userId', 'action', 'resource', 'details', 'timestamp'];
+  // auditId is the correct primary-key field on AuditLog — fixes the blank ID column
+  basicCols = ['auditId', 'userId', 'action', 'resource', 'details', 'timestamp'];
 
-  constructor(private auditSvc: AuditService, private auditMgmtSvc: AuditManagementService) {}
+  constructor(private auditSvc: AuditService) {}
 
-  ngOnInit() { this.loadAll(); this.loadMgmtLogs(); }
+  ngOnInit() { this.load(); }
 
-  loadAll() {
+  load() {
     this.basicLoading = true;
-    this.auditSvc.getAll().subscribe({
-      next: r => { this.basicLoading = false; this.basicLogs = r.data ?? []; },
-      error: () => { this.basicLoading = false; this.basicLogs = []; }
+    this.auditSvc.getLatest100Logs().subscribe({
+      next: r => {
+        this.allBasicLogs = r.data ?? [];
+        this.basicLogs = [...this.allBasicLogs];
+        this.basicLoading = false;
+      },
+      error: () => {
+        this.basicLoading = false;
+        this.basicLogs = [];
+      }
     });
   }
 
-  loadMgmtLogs() {
-    this.mgmtLoading = true;
-    this.auditMgmtSvc.getLogs().subscribe({
-      next: r => { this.mgmtLoading = false; this.mgmtLogs = r.data ?? []; },
-      error: () => { this.mgmtLoading = false; this.mgmtLogs = []; }
-    });
+  // Client-side filter — no extra API calls
+  applyFilter() {
+    const a = this.actionFilter.toLowerCase();
+    const u = this.userIdFilter.toLowerCase();
+    this.basicLogs = this.allBasicLogs.filter(l =>
+      (!a || (l.action ?? '').toLowerCase().includes(a)) &&
+      (!u || (l.resource ?? '').toLowerCase().includes(u)
+           || (l.userId ?? '').toString().includes(u))
+    );
   }
 
-  filterByUser() {
-    if (!this.userIdFilter) { this.loadAll(); return; }
-    this.basicLoading = true;
-    this.auditSvc.getByUser(this.userIdFilter).subscribe({
-      next: r => { this.basicLoading = false; this.basicLogs = r.data ?? []; },
-      error: () => { this.basicLoading = false; this.basicLogs = []; }
-    });
-  }
-
-  filterByAction() {
-    if (!this.actionFilter) { this.loadMgmtLogs(); return; }
-    this.mgmtLoading = true;
-    this.auditMgmtSvc.getLogsByAction(this.actionFilter).subscribe({
-      next: r => { this.mgmtLoading = false; this.mgmtLogs = r.data ?? []; },
-      error: () => { this.mgmtLoading = false; this.mgmtLogs = []; }
-    });
+  // Reset both filters and restore the full dataset
+  clear() {
+    this.userIdFilter = '';
+    this.actionFilter = '';
+    this.basicLogs = [...this.allBasicLogs];
   }
 
   exportCSV(data: any[], filename: string) {

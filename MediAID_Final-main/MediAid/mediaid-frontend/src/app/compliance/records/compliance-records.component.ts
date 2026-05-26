@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { map } from 'rxjs/operators';
@@ -64,7 +64,8 @@ export class ComplianceRecordsComponent implements OnInit {
     private enrollmentSvc: EnrollmentService,
     private disbursementSvc: DisbursementService,
     private authSvc: AuthService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() { this.loadAll(); }
@@ -73,16 +74,16 @@ export class ComplianceRecordsComponent implements OnInit {
   loadAll() {
     this.loading = true;
     this.complianceSvc.getAll().subscribe({
-      next: r => { this.loading = false; this.all = r.data ?? []; },
-      error: () => { this.loading = false; this.toastr.error('Could not load compliance records.'); }
+      next: r => { this.loading = false; this.all = r.data ?? []; this.cdr.markForCheck(); },
+      error: () => { this.loading = false; this.toastr.error('Could not load compliance records.'); this.cdr.markForCheck(); }
     });
     this.complianceSvc.getViolations().subscribe({
-      next: r => { this.violations = r.data ?? []; },
-      error: () => { this.violations = []; }
+      next: r => { this.violations = r.data ?? []; this.cdr.markForCheck(); },
+      error: () => { this.violations = []; this.cdr.markForCheck(); }
     });
     this.complianceSvc.getFlagged().subscribe({
-      next: r => { this.flagged = r.data ?? []; },
-      error: () => { this.flagged = []; }
+      next: r => { this.flagged = r.data ?? []; this.cdr.markForCheck(); },
+      error: () => { this.flagged = []; this.cdr.markForCheck(); }
     });
   }
 
@@ -138,11 +139,13 @@ export class ComplianceRecordsComponent implements OnInit {
       next: entities => {
         if (isEval) { this.evalLoadingEntities = false; this.evalEntities = entities; }
         else        { this.createLoadingEntities = false; this.createEntities = entities; }
+        this.cdr.markForCheck();
       },
       error: (err: any) => {
         console.error(`[ComplianceRecords] fetchEntities(${type}, ${target}) failed`, err);
         if (isEval) { this.evalLoadingEntities = false; this.evalLoadError = true; }
         else        { this.createLoadingEntities = false; this.createLoadError = true; }
+        this.cdr.markForCheck();
       }
     });
   }
@@ -166,10 +169,12 @@ export class ComplianceRecordsComponent implements OnInit {
         this.evalResult = r.data;
         this.toastr.success('Compliance evaluation complete.');
         this.loadAll();
+        this.cdr.markForCheck();
       },
       error: () => {
         this.evalRunning = false;
         this.toastr.error('Evaluation failed. Please try again.');
+        this.cdr.markForCheck();
       }
     });
   }
@@ -196,10 +201,12 @@ export class ComplianceRecordsComponent implements OnInit {
         this.createResult = 'PASS';
         this.createNotes = '';
         this.loadAll();
+        this.cdr.markForCheck();
       },
       error: () => {
         this.createSaving = false;
         this.toastr.error('Could not save record.');
+        this.cdr.markForCheck();
       }
     });
   }

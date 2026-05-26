@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -17,12 +17,12 @@ export class CitizenPaymentsComponent implements OnInit {
   payments: any[] = [];
   loading = true;
 
-  constructor(private paymentSvc: PaymentService, private toastr: ToastrService) {}
+  constructor(private paymentSvc: PaymentService, private toastr: ToastrService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
     this.paymentSvc.getMy().subscribe({
-      next: r => { this.loading = false; this.payments = r.data ?? []; },
-      error: () => { this.loading = false; this.toastr.error('Could not load payments.'); }
+      next: r => { this.loading = false; this.payments = r.data ?? []; this.cdr.markForCheck(); },
+      error: () => { this.loading = false; this.toastr.error('Could not load payments.'); this.cdr.markForCheck(); }
     });
   }
 }

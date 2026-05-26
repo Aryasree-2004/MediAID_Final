@@ -10,12 +10,19 @@ import com.cts.claim_service.model.ClaimValidation;
 import com.cts.claim_service.security.CurrentUserUtil;
 import com.cts.claim_service.service.ClaimService;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.net.MalformedURLException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 @RestController
@@ -24,6 +31,9 @@ public class ClaimController {
 
     private final ClaimService claimService;
     private final CurrentUserUtil currentUserUtil;
+
+    @Value("${file.upload-dir:./claim-uploads}")
+    private String uploadDir;
 
     public ClaimController(ClaimService claimService, CurrentUserUtil currentUserUtil) {
         this.claimService = claimService;
@@ -105,6 +115,19 @@ public class ClaimController {
                 .status("SUCCESS").message("Documents retrieved").data(documents).build());
     }
 
+    /**
+     * Internal endpoint — called by compliance-service (and other microservices) via Feign.
+     * No @PreAuthorize: inter-service calls do not carry a user JWT.
+     * Permitted without auth in SecurityConfig under /api/claims/internal/**.
+     */
+    @GetMapping("/internal/{claimId}")
+    public ResponseEntity<APIResponse<ClaimResponseDTO>> getClaimInternal(
+            @PathVariable Long claimId) throws ResourceNotFoundException {
+        ClaimResponseDTO responseDTO = claimService.getClaimById(claimId);
+        return ResponseEntity.ok(APIResponse.<ClaimResponseDTO>builder()
+                .status("SUCCESS").message("Claim retrieved internally").data(responseDTO).build());
+    }
+
     @GetMapping("/{claimId}/citizen")
     public ResponseEntity<APIResponse<Long>> getCitizenIdByClaimId(@PathVariable Long claimId) {
         Long citizenId = claimService.getCitizenIdByClaimId(claimId);
@@ -117,5 +140,30 @@ public class ClaimController {
         Double amount = claimService.getClaimAmountByClaimId(claimId);
         return ResponseEntity.ok(APIResponse.<Double>builder()
                 .status("SUCCESS").message("Claim amount retrieved").data(amount).build());
+    }
+
+    /**
+     * Download a claim document by file name.
+     * No @PreAuthorize — permitted without role restrictions in SecurityConfig
+     * under /api/claims/documents/** so both citizens and officers can access it.
+     */
+    @GetMapping("/documents/{fileName}/download")
+    public ResponseEntity<Resource> downloadDocument(@PathVariable String fileName) {
+        try {
+            Path filePath = Paths.get(uploadDir).resolve(fileName);
+            Resource resource = new UrlResource(filePath.toUri());
+
+            if (!resource.exists()) {
+                throw new ResourceNotFoundException("File not found: " + fileName);
+            }
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION,
+                            "attachment; filename=\"" + resource.getFilename() + "\"")
+                    .body(resource);
+
+        } catch (MalformedURLException e) {
+            throw new ResourceNotFoundException("File not found: " + fileName);
+        }
     }
 }

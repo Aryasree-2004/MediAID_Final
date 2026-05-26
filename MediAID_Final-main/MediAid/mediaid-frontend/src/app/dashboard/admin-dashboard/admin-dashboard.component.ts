@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
@@ -16,7 +16,7 @@ export class AdminDashboardComponent implements OnInit {
   summaryCards: any[] = [];
   loading = true;
 
-  constructor(private userSvc: UserService) {}
+  constructor(private userSvc: UserService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
     this.refreshCards();
@@ -30,8 +30,9 @@ export class AdminDashboardComponent implements OnInit {
         this.managers = data.filter((u: any) => u.role === 'MANAGER').length;
         this.loading = false;
         this.refreshCards();
+        this.cdr.markForCheck();
       },
-      error: () => { this.loading = false; }
+      error: () => { this.loading = false; this.cdr.markForCheck(); }
     });
   }
 

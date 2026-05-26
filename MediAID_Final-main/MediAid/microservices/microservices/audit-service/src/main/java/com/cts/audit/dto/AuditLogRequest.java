@@ -8,6 +8,7 @@ public class AuditLogRequest {
     private String action;
     private String resource;
     private LocalDateTime timestamp;
+    private String details;
 
     public AuditLogRequest() {}
 
@@ -29,4 +30,7 @@ public class AuditLogRequest {
 
     public LocalDateTime getTimestamp() { return timestamp; }
     public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }
+
+    public String getDetails() { return details; }
+    public void setDetails(String details) { this.details = details; }
 }

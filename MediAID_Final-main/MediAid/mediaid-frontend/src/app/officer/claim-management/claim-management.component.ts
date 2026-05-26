@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -35,13 +35,14 @@ export class ClaimManagementComponent implements OnInit {
     private citizenSvc: CitizenService,
     private refresh: RefreshService,
     private toastr: ToastrService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
     this.claimSvc.getAll().subscribe({
-      next: r => { this.loading = false; if (r.data) { this.claims = r.data; this.applyFilter(); } },
-      error: () => { this.loading = false; this.toastr.error('Could not load claims.'); }
+      next: r => { this.loading = false; if (r.data) { this.claims = r.data; this.applyFilter(); } this.cdr.markForCheck(); },
+      error: () => { this.loading = false; this.toastr.error('Could not load claims.'); this.cdr.markForCheck(); }
     });
   }
 
@@ -53,8 +54,8 @@ export class ClaimManagementComponent implements OnInit {
     if (this.claimDocs[claimId] || this.docsLoading[claimId]) return;
     this.docsLoading[claimId] = true;
     this.claimSvc.getDocuments(claimId).subscribe({
-      next: r => { this.docsLoading[claimId] = false; this.claimDocs[claimId] = r.data ?? []; },
-      error: () => { this.docsLoading[claimId] = false; this.claimDocs[claimId] = []; }
+      next: r => { this.docsLoading[claimId] = false; this.claimDocs[claimId] = r.data ?? []; this.cdr.markForCheck(); },
+      error: () => { this.docsLoading[claimId] = false; this.claimDocs[claimId] = []; this.cdr.markForCheck(); }
     });
   }
 
@@ -77,28 +78,30 @@ export class ClaimManagementComponent implements OnInit {
   }
 
   viewDoc(fileName: string) {
-    this.citizenSvc.downloadDocument(fileName).subscribe({
+    this.claimSvc.downloadDocument(fileName).subscribe({
       next: blob => {
         const typed = new Blob([blob], { type: this.mimeFor(fileName) });
         const url = URL.createObjectURL(typed);
         const win = window.open(url, '_blank');
         if (!win) this.toastr.warning('Pop-up blocked. Allow pop-ups or use Download.');
         setTimeout(() => URL.revokeObjectURL(url), 60_000);
+        this.cdr.markForCheck();
       },
-      error: () => this.toastr.error('Could not load document.')
+      error: () => { this.toastr.error('Could not load document.'); this.cdr.markForCheck(); }
     });
   }
 
   downloadDoc(fileName: string) {
-    this.citizenSvc.downloadDocument(fileName).subscribe({
+    this.claimSvc.downloadDocument(fileName).subscribe({
       next: blob => {
         const typed = new Blob([blob], { type: this.mimeFor(fileName) });
         const url = URL.createObjectURL(typed);
         const a = document.createElement('a');
         a.href = url; a.download = this.originalFileName(fileName); a.click();
         URL.revokeObjectURL(url);
+        this.cdr.markForCheck();
       },
-      error: () => this.toastr.error('Download failed.')
+      error: () => { this.toastr.error('Download failed.'); this.cdr.markForCheck(); }
     });
   }
 
@@ -114,8 +117,9 @@ export class ClaimManagementComponent implements OnInit {
           this.applyFilter();
           this.refresh.notify('claims');
           this.toastr.success(`Claim ${status.toLowerCase()}.`);
+          this.cdr.markForCheck();
         },
-        error: () => this.toastr.error(`Could not ${status.toLowerCase()} claim.`)
+        error: () => { this.toastr.error(`Could not ${status.toLowerCase()} claim.`); this.cdr.markForCheck(); }
       });
     });
   }

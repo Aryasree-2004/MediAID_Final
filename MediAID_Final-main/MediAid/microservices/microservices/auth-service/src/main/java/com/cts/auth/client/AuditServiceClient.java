@@ -29,4 +29,15 @@ public class AuditServiceClient {
             log.warn("[Auth] Audit logging failed (non-critical): {}", e.getMessage());
         }
     }
+
+    /** Overload that also records a details string for richer audit trail entries. */
+    public void log(Long userId, String action, String resource, String details) {
+        try {
+            AuditLogRequest request = new AuditLogRequest(userId, action, resource, details);
+            auditFeignClient.log(request);
+            log.debug("[Auth] Audit log written: action={} userId={}", action, userId);
+        } catch (Exception e) {
+            log.warn("[Auth] Audit logging failed (non-critical): {}", e.getMessage());
+        }
+    }
 }

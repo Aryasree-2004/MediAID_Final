@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
@@ -22,7 +22,7 @@ export class ForgotPasswordComponent {
   form = this.fb.group({ email: ['', [Validators.required, Validators.email]] });
   loading = false;
 
-  constructor(private auth: AuthService, private router: Router, private toastr: ToastrService) {}
+  constructor(private auth: AuthService, private router: Router, private toastr: ToastrService, private cdr: ChangeDetectorRef) {}
 
   submit() {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
@@ -32,8 +32,9 @@ export class ForgotPasswordComponent {
         this.loading = false;
         this.toastr.success('OTP sent to your email!');
         this.router.navigate(['/auth/reset-password'], { queryParams: { email: this.form.value.email } });
+        this.cdr.markForCheck();
       },
-      error: () => { this.loading = false; }
+      error: () => { this.loading = false; this.cdr.markForCheck(); }
     });
   }
 }

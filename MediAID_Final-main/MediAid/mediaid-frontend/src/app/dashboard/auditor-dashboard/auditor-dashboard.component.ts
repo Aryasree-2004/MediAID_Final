@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
@@ -18,7 +18,7 @@ export class AuditorDashboardComponent implements OnInit {
   summaryCards: any[] = [];
   loading = true;
 
-  constructor(private auditMgmtSvc: AuditManagementService) {}
+  constructor(private auditMgmtSvc: AuditManagementService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
     this.refreshCards();
@@ -30,8 +30,9 @@ export class AuditorDashboardComponent implements OnInit {
         this.uniqueResources = new Set(mgmtLogs.map((l: any) => l.resource).filter(Boolean)).size;
         this.loading = false;
         this.refreshCards();
+        this.cdr.markForCheck();
       },
-      error: () => { this.loading = false; }
+      error: () => { this.loading = false; this.cdr.markForCheck(); }
     });
   }
 

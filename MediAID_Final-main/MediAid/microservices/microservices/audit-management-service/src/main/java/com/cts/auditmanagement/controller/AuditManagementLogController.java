@@ -47,6 +47,16 @@ public class AuditManagementLogController {
                 .build());
     }
 
+    @GetMapping("/logs/latest")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','OFFICER','COMPLIANCE','AUDITOR')")
+    public ResponseEntity<APIResponse<List<AuditManagementLog>>> getLatest100Logs() {
+        return ResponseEntity.ok(APIResponse.<List<AuditManagementLog>>builder()
+                .status("SUCCESS")
+                .message("Latest 100 audit management logs fetched")
+                .data(logService.getLatest100Logs())
+                .build());
+    }
+
     @GetMapping("/logs/user/{userId}")
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER','OFFICER','COMPLIANCE','AUDITOR')")
     public ResponseEntity<APIResponse<List<AuditManagementLog>>> getLogsByUser(

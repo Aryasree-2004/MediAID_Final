@@ -45,6 +45,11 @@ public class AuditManagementLogServiceImpl implements AuditManagementLogService 
     }
 
     @Override
+    public List<AuditManagementLog> getLatest100Logs() {
+        return repository.findTop100ByOrderByTimestampDesc();
+    }
+
+    @Override
     public List<AuditManagementLog> getLogsByUser(Long userId) {
         return repository.findByUserId(userId);
     }

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -44,7 +44,8 @@ export class EnrollmentManagementComponent implements OnInit {
     private citizenSvc: CitizenService,
     private refresh: RefreshService,
     private toastr: ToastrService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
@@ -60,8 +61,9 @@ export class EnrollmentManagementComponent implements OnInit {
         for (const s of (schemes.data ?? [])) this.schemesById[s.schemeId] = s;
         for (const c of (citizens.data ?? [])) this.citizensById[c.citizenId] = c;
         this.applyFilter();
+        this.cdr.markForCheck();
       },
-      error: () => { this.loading = false; this.toastr.error('Could not load enrollments.'); }
+      error: () => { this.loading = false; this.toastr.error('Could not load enrollments.'); this.cdr.markForCheck(); }
     });
   }
 
@@ -106,8 +108,9 @@ export class EnrollmentManagementComponent implements OnInit {
           this.applyFilter();
           this.refresh.notify('enrollments');
           this.toastr.success(`Enrollment ${status.toLowerCase()}.`);
+          this.cdr.markForCheck();
         },
-        error: () => this.toastr.error(`Could not ${status.toLowerCase()} enrollment.`)
+        error: () => { this.toastr.error(`Could not ${status.toLowerCase()} enrollment.`); this.cdr.markForCheck(); }
       });
     });
   }

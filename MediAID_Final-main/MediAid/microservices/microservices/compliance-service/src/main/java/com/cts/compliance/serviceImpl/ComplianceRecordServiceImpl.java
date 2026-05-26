@@ -4,6 +4,7 @@ import com.cts.compliance.client.AuditManagementFeignClient;
 import com.cts.compliance.client.ClaimFeignClient;
 import com.cts.compliance.client.DisbursementFeignClient;
 import com.cts.compliance.client.EnrollmentFeignClient;
+import com.cts.compliance.client.SchemeFeignClient;
 import com.cts.compliance.dto.*;
 import com.cts.compliance.enums.ComplianceResult;
 import com.cts.compliance.enums.EntityType;
@@ -38,6 +39,7 @@ public class ComplianceRecordServiceImpl implements ComplianceRecordService {
     private final ClaimFeignClient claimFeignClient;
     private final DisbursementFeignClient disbursementFeignClient;
     private final EnrollmentFeignClient enrollmentFeignClient;
+    private final SchemeFeignClient schemeFeignClient;
 
     public ComplianceRecordServiceImpl(
             ComplianceRecordRepository repository,
@@ -46,7 +48,8 @@ public class ComplianceRecordServiceImpl implements ComplianceRecordService {
             AuditManagementFeignClient auditManagementFeignClient,
             ClaimFeignClient claimFeignClient,
             DisbursementFeignClient disbursementFeignClient,
-            EnrollmentFeignClient enrollmentFeignClient) {
+            EnrollmentFeignClient enrollmentFeignClient,
+            SchemeFeignClient schemeFeignClient) {
         this.repository                 = repository;
         this.ruleEngine                 = ruleEngine;
         this.mapper                     = mapper;
@@ -54,6 +57,7 @@ public class ComplianceRecordServiceImpl implements ComplianceRecordService {
         this.claimFeignClient           = claimFeignClient;
         this.disbursementFeignClient    = disbursementFeignClient;
         this.enrollmentFeignClient      = enrollmentFeignClient;
+        this.schemeFeignClient          = schemeFeignClient;
     }
 
     // ── Simple evaluate ───────────────────────────────────────────────────────
@@ -176,6 +180,7 @@ public class ComplianceRecordServiceImpl implements ComplianceRecordService {
                 builder.amount(data.getClaimAmount());
                 // claimType not yet on Claim entity — will be populated when team adds it
                 // builder.claimType(data.getClaimType());
+                enrichScheme(data.getSchemeId(), builder);
             }
         } catch (Exception ex) {
             log.warn("[ComplianceService] Failed to enrich CLAIM:{} — {}. Rules run on minimal context.",
@@ -197,6 +202,7 @@ public class ComplianceRecordServiceImpl implements ComplianceRecordService {
                 builder.amount(data.getAmount() != null
                         ? data.getAmount().doubleValue() : null);
                 builder.linkedClaimId(data.getClaimId());
+                enrichScheme(data.getSchemeId(), builder);
             }
         } catch (Exception ex) {
             log.warn("[ComplianceService] Failed to enrich DISBURSEMENT:{} — {}. Rules run on minimal context.",
@@ -223,10 +229,43 @@ public class ComplianceRecordServiceImpl implements ComplianceRecordService {
                     builder.policyEnrollmentDate(LocalDate.parse(data.getEnrollmentDate()));
                 }
                 builder.citizenId(data.getCitizenId());
+                enrichScheme(data.getSchemeId(), builder);
             }
         } catch (Exception ex) {
             log.warn("[ComplianceService] Failed to enrich POLICY (enrollment):{} — {}. Rules run on minimal context.",
                     enrollmentId, ex.getMessage());
+        }
+    }
+
+    /**
+     * Fetches scheme thresholds from scheme-service and sets schemeMaxCoverage,
+     * schemeValidityYears, and schemeActive on the builder.
+     * Safe to call even when schemeId is null — logs a warning and returns immediately.
+     * Any exception is caught and logged; enrichment simply does not set scheme fields.
+     */
+    private void enrichScheme(Long schemeId,
+            ComplianceEvaluationRequestDTO.ComplianceEvaluationRequestDTOBuilder builder) {
+        if (schemeId == null) {
+            log.warn("[ComplianceService] schemeId is null — scheme enrichment skipped.");
+            return;
+        }
+        try {
+            SchemeClientResponseDTO response = schemeFeignClient.getScheme(schemeId);
+            if (response != null && response.getData() != null) {
+                SchemeClientResponseDTO.SchemeData scheme = response.getData();
+                builder.schemeMaxCoverage(scheme.getMaxCoverageAmount());
+                builder.schemeValidityYears(scheme.getValidityYears());
+                builder.schemeActive("ACTIVE".equalsIgnoreCase(scheme.getStatus()));
+                log.debug("[ComplianceService] Scheme {} enriched: maxCoverage={}, validityYears={}, active={}",
+                        schemeId, scheme.getMaxCoverageAmount(), scheme.getValidityYears(),
+                        "ACTIVE".equalsIgnoreCase(scheme.getStatus()));
+            } else {
+                log.warn("[ComplianceService] scheme-service returned null response for schemeId={}. Scheme rules will flag.",
+                        schemeId);
+            }
+        } catch (Exception ex) {
+            log.warn("[ComplianceService] Failed to enrich scheme:{} — {}. Scheme rules will flag.",
+                    schemeId, ex.getMessage());
         }
     }
 

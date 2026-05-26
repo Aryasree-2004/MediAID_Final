@@ -11,4 +11,5 @@ public interface AuditManagementLogRepository extends JpaRepository<AuditManagem
     List<AuditManagementLog> findByUserId(Long userId);
     List<AuditManagementLog> findByAction(String action);
     List<AuditManagementLog> findByResourceContaining(String resourceFragment);
+    List<AuditManagementLog> findTop100ByOrderByTimestampDesc();
 }

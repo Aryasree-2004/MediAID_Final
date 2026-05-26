@@ -24,5 +24,11 @@ export class ClaimService {
   getDocuments(claimId: number) {
     return this.http.get<ApiResponse<ClaimDocumentResponse[]>>(`${this.base}/${claimId}/documents`);
   }
+  downloadDocument(fileName: string) {
+    return this.http.get(
+      `${this.base}/documents/${fileName}/download`,
+      { responseType: 'blob' }
+    );
+  }
   getValidations() { return this.http.get<ApiResponse<any[]>>(`${this.base}/validations`); }
 }

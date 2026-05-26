@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
@@ -37,7 +37,8 @@ export class CitizenDashboardComponent implements OnInit, OnDestroy {
     private disbursementSvc: DisbursementService,
     private paymentSvc: PaymentService,
     private schemeSvc: SchemeService,
-    private refresh: RefreshService
+    private refresh: RefreshService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
@@ -73,6 +74,7 @@ export class CitizenDashboardComponent implements OnInit, OnDestroy {
       this.totalDisbursed = (disbursements.data ?? []).reduce((s: number, d: any) => s + (d.amount || 0), 0);
       this.loading = false;
       this.refreshCards();
+      this.cdr.markForCheck();
     });
   }
 

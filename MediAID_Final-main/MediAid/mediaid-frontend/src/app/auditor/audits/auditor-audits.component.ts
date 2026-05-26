@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -31,7 +31,7 @@ export class AuditorAuditsComponent implements OnInit {
   filterStatus = '';
   filterScope = '';
 
-  constructor(private auditMgmtSvc: AuditManagementService, private toastr: ToastrService) {}
+  constructor(private auditMgmtSvc: AuditManagementService, private toastr: ToastrService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() { this.load(); }
 
@@ -42,8 +42,9 @@ export class AuditorAuditsComponent implements OnInit {
         this.loading = false;
         this.audits = r.data ?? [];
         this.applyFilter();
+        this.cdr.markForCheck();
       },
-      error: () => { this.loading = false; this.toastr.error('Could not load audits.'); }
+      error: () => { this.loading = false; this.toastr.error('Could not load audits.'); this.cdr.markForCheck(); }
     });
   }
 

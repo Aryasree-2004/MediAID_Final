@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
@@ -18,7 +18,7 @@ export class ComplianceDashboardComponent implements OnInit {
   summaryCards: any[] = [];
   loading = true;
 
-  constructor(private complianceSvc: ComplianceService) {}
+  constructor(private complianceSvc: ComplianceService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
     this.refreshCards();
@@ -35,6 +35,7 @@ export class ComplianceDashboardComponent implements OnInit {
       this.passed = allData.filter((r: any) => (r.result || '').toUpperCase() === 'PASS').length;
       this.loading = false;
       this.refreshCards();
+      this.cdr.markForCheck();
     });
   }
 

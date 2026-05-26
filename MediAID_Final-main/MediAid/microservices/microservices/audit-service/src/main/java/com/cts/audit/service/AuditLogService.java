@@ -23,6 +23,10 @@ public class AuditLogService {
         return auditLogRepository.findAll();
     }
 
+    public List<AuditLog> getLatest100Logs() {
+        return auditLogRepository.findTop100ByOrderByTimestampDesc();
+    }
+
     public List<AuditLog> getLogsByUser(Long userId) {
         return auditLogRepository.findByUserId(userId);
     }

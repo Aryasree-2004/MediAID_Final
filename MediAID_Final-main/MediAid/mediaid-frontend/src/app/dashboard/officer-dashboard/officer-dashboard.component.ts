@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
@@ -33,7 +33,8 @@ export class OfficerDashboardComponent implements OnInit, OnDestroy {
     private enrollmentSvc: EnrollmentService,
     private claimSvc: ClaimService,
     private disbursementSvc: DisbursementService,
-    private refresh: RefreshService
+    private refresh: RefreshService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
@@ -74,6 +75,7 @@ export class OfficerDashboardComponent implements OnInit, OnDestroy {
       this.loading = false;
       this.lastUpdated = new Date();
       this.refreshCards();
+      this.cdr.markForCheck();
     });
   }
 

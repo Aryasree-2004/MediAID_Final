@@ -15,6 +15,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -68,6 +70,73 @@ public class GatewayController {
     public GatewayController(RestTemplate restTemplate, JwtUtils jwtUtils) {
         this.restTemplate = restTemplate;
         this.jwtUtils = jwtUtils;
+    }
+
+    /**
+     * Dedicated proxy for binary file downloads.
+     * Uses byte[] (not String) so binary content is never corrupted by charset conversion.
+     * Handles both citizen-service (/api/documents/) and claim-service (/api/claims/documents/).
+     * Spring MVC selects this over the generic @RequestMapping("/**") because it is more specific.
+     */
+    @GetMapping({
+        "/api/documents/{fileName:.+}/download",
+        "/api/claims/documents/{fileName:.+}/download"
+    })
+    public ResponseEntity<byte[]> proxyDownload(
+            HttpServletRequest request,
+            @PathVariable String fileName) {
+
+        String path = request.getRequestURI();
+        log.debug("Gateway binary download: {}", path);
+
+        // JWT authentication — same check as the generic route method.
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            log.warn("Unauthorized download request for {}", path);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        String token = authHeader.substring(7);
+        if (!jwtUtils.validateJwtToken(token)) {
+            log.warn("Invalid JWT for download request {}", path);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        String extractedUsername = jwtUtils.getUsernameFromToken(token);
+        String extractedRole    = jwtUtils.getRoleFromToken(token);
+        Long   extractedUserId  = jwtUtils.getUserIdFromToken(token);
+
+        // Route: claim documents → claim-service, everything else → citizen-service.
+        String targetBase = path.startsWith("/api/claims/") ? claimServiceUrl : citizenServiceUrl;
+        String targetUrl  = targetBase + path;
+
+        HttpHeaders headers = buildForwardHeaders(request, extractedUsername, extractedRole, extractedUserId);
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        try {
+            ResponseEntity<byte[]> resp = restTemplate.exchange(targetUrl, HttpMethod.GET, entity, byte[].class);
+
+            // Pass through only the headers the browser needs for a file download.
+            HttpHeaders responseHeaders = new HttpHeaders();
+            String ct   = resp.getHeaders().getFirst(HttpHeaders.CONTENT_TYPE);
+            String cd   = resp.getHeaders().getFirst(HttpHeaders.CONTENT_DISPOSITION);
+            String cl   = resp.getHeaders().getFirst(HttpHeaders.CONTENT_LENGTH);
+            if (ct  != null) responseHeaders.set(HttpHeaders.CONTENT_TYPE,         ct);
+            if (cd  != null) responseHeaders.set(HttpHeaders.CONTENT_DISPOSITION,  cd);
+            if (cl  != null) responseHeaders.set(HttpHeaders.CONTENT_LENGTH,        cl);
+
+            return ResponseEntity.status(resp.getStatusCode())
+                    .headers(responseHeaders)
+                    .body(resp.getBody());
+
+        } catch (HttpStatusCodeException e) {
+            log.warn("Downstream returned {} for download {}", e.getStatusCode(), targetUrl);
+            return ResponseEntity.status(e.getStatusCode()).build();
+        } catch (ResourceAccessException e) {
+            log.error("Service unreachable for download {}: {}", targetUrl, e.getMessage());
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
+        } catch (Exception e) {
+            log.error("Unexpected download proxy error for {}", targetUrl, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     /**

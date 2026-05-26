@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
@@ -34,7 +34,7 @@ export class UserManagementComponent implements OnInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
-  constructor(private userSvc: UserService, private toastr: ToastrService, private dialog: MatDialog) {}
+  constructor(private userSvc: UserService, private toastr: ToastrService, private dialog: MatDialog, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
     this.userSvc.getAll().subscribe({
@@ -45,8 +45,9 @@ export class UserManagementComponent implements OnInit {
           this.dataSource.paginator = this.paginator;
           this.dataSource.sort = this.sort;
         }
+        this.cdr.markForCheck();
       },
-      error: () => { this.loading = false; }
+      error: () => { this.loading = false; this.cdr.markForCheck(); }
     });
   }
 
@@ -70,14 +71,16 @@ export class UserManagementComponent implements OnInit {
         Object.assign(original, r.data ?? this.editingUser);
         if (roleChanged) {
           this.userSvc.updateRole(original.userId, this.editingUser.role).subscribe({
-            next: r2 => { original.role = r2.data?.role ?? this.editingUser.role; }
+            next: r2 => { original.role = r2.data?.role ?? this.editingUser.role; this.cdr.markForCheck(); }
           });
         }
         this.editingUser = null;
         this.toastr.success('User updated.');
+        this.cdr.markForCheck();
       },
       error: err => {
         this.toastr.error(err?.error?.message || 'Update failed.');
+        this.cdr.markForCheck();
       }
     });
   }
@@ -90,8 +93,9 @@ export class UserManagementComponent implements OnInit {
         next: () => {
           this.dataSource.data = this.dataSource.data.filter((x: any) => x.userId !== u.userId);
           this.toastr.success('User deleted.');
+          this.cdr.markForCheck();
         },
-        error: () => this.toastr.error('Could not delete user.')
+        error: () => { this.toastr.error('Could not delete user.'); this.cdr.markForCheck(); }
       });
     });
   }

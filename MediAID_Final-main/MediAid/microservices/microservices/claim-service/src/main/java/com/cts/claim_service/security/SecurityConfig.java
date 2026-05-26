@@ -26,7 +26,9 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**")
+                        // Internal endpoints called by other microservices - no JWT required
+                        .requestMatchers("/api/claims/internal/**", "/api/claims/documents/**",
+                                "/swagger-ui/**", "/v3/api-docs/**")
                         .permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

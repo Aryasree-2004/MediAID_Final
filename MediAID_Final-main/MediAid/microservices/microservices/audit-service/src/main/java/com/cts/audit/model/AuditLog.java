@@ -32,4 +32,7 @@ public class AuditLog {
 
     @NotNull(message = "Timestamp is required")
     private LocalDateTime timestamp;
+
+    @Column(columnDefinition = "TEXT")
+    private String details;
 }

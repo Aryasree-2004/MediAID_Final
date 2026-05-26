@@ -57,7 +57,10 @@ public class AuthService {
 
         User savedUser = userRepository.save(user);
 
-        auditServiceClient.log(savedUser.getUserId(), "REGISTER", "AuthService");
+        auditServiceClient.log(savedUser.getUserId(), "REGISTER",
+                "USER:" + savedUser.getUserId(),
+                "User registered — email=" + savedUser.getEmail()
+                        + " role=" + savedUser.getRole());
     }
 
     public AuthResponseDTO login(LoginRequestDTO request) {
@@ -70,7 +73,10 @@ public class AuthService {
 
         String token = jwtUtils.generateToken(user.getEmail(), user.getRole().name(),user.getUserId());
 
-        auditServiceClient.log(user.getUserId(), "LOGIN", "AuthService");
+        auditServiceClient.log(user.getUserId(), "LOGIN",
+                "USER:" + user.getUserId(),
+                "User logged in — email=" + user.getEmail()
+                        + " role=" + user.getRole());
 
         return new AuthResponseDTO(token, user.getRole().name());
     }
@@ -86,7 +92,9 @@ public class AuthService {
 
         emailService.sendOtpEmail(user.getEmail(), otp);
 
-        auditServiceClient.log(user.getUserId(), "FORGOT_PASSWORD", "AuthService");
+        auditServiceClient.log(user.getUserId(), "FORGOT_PASSWORD",
+                "USER:" + user.getUserId(),
+                "Password reset requested — email=" + user.getEmail());
     }
 
     public List<UserResponseDTO> getAllUsers() {
@@ -114,6 +122,8 @@ public class AuthService {
         user.setOtpExpiry(null);
         userRepository.save(user);
 
-        auditServiceClient.log(user.getUserId(), "RESET_PASSWORD", "AuthService");
+        auditServiceClient.log(user.getUserId(), "RESET_PASSWORD",
+                "USER:" + user.getUserId(),
+                "Password reset completed — email=" + user.getEmail());
     }
 }

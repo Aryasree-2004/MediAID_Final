@@ -1,4 +1,4 @@
-import { Component, ViewEncapsulation, inject } from '@angular/core';
+import { Component, ViewEncapsulation, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -33,7 +33,7 @@ export class LoginComponent {
     { icon: 'account_balance',    text: 'Direct bank benefit transfers' },
   ];
 
-  constructor(private auth: AuthService, private router: Router, private toastr: ToastrService) {}
+  constructor(private auth: AuthService, private router: Router, private toastr: ToastrService, private cdr: ChangeDetectorRef) {}
 
   submit() {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
@@ -47,8 +47,9 @@ export class LoginComponent {
         } else {
           this.toastr.error(res.message || 'Login failed. Please check your credentials.');
         }
+        this.cdr.markForCheck();
       },
-      error: () => { this.loading = false; }
+      error: () => { this.loading = false; this.cdr.markForCheck(); }
     });
   }
 }

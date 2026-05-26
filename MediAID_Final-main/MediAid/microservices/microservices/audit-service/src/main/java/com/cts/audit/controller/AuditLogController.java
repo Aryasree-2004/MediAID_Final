@@ -32,6 +32,7 @@ public class AuditLogController {
         log.setAction(request.getAction());
         log.setResource(request.getResource());
         log.setTimestamp(request.getTimestamp() != null ? request.getTimestamp() : LocalDateTime.now());
+        log.setDetails(request.getDetails());
 
         AuditLog saved = auditLogService.createLog(log);
         return ResponseEntity.ok(APIResponse.<AuditLog>builder()
@@ -48,6 +49,17 @@ public class AuditLogController {
         return ResponseEntity.ok(APIResponse.<List<AuditLog>>builder()
                 .status("SUCCESS")
                 .message("Audit logs fetched successfully")
+                .data(logs)
+                .build());
+    }
+
+    @GetMapping("/latest")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','COMPLIANCE','AUDITOR')")
+    public ResponseEntity<APIResponse<List<AuditLog>>> getLatest100Logs() {
+        List<AuditLog> logs = auditLogService.getLatest100Logs();
+        return ResponseEntity.ok(APIResponse.<List<AuditLog>>builder()
+                .status("SUCCESS")
+                .message("Latest 100 audit logs fetched")
                 .data(logs)
                 .build());
     }

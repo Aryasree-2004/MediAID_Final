@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -32,20 +32,20 @@ export class ComplianceManagementComponent implements OnInit {
   evalForm = this.fb.group({ entityId: [null, Validators.required], entityType: ['CLAIM'] });
   recordForm = this.fb.group({ entityId: [null, Validators.required], entityType: ['CLAIM'], result: ['PASS'], notes: [''] });
 
-  constructor(private complianceSvc: ComplianceService, private authSvc: AuthService, private toastr: ToastrService) {}
+  constructor(private complianceSvc: ComplianceService, private authSvc: AuthService, private toastr: ToastrService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
     this.complianceSvc.getAll().subscribe({
-      next: r => { this.loading = false; this.all = r.data ?? []; },
-      error: () => { this.loading = false; this.toastr.error('Could not load compliance records.'); }
+      next: r => { this.loading = false; this.all = r.data ?? []; this.cdr.markForCheck(); },
+      error: () => { this.loading = false; this.toastr.error('Could not load compliance records.'); this.cdr.markForCheck(); }
     });
     this.complianceSvc.getViolations().subscribe({
-      next: r => { this.violations = r.data ?? []; },
-      error: () => { this.violations = []; }
+      next: r => { this.violations = r.data ?? []; this.cdr.markForCheck(); },
+      error: () => { this.violations = []; this.cdr.markForCheck(); }
     });
     this.complianceSvc.getFlagged().subscribe({
-      next: r => { this.flagged = r.data ?? []; },
-      error: () => { this.flagged = []; }
+      next: r => { this.flagged = r.data ?? []; this.cdr.markForCheck(); },
+      error: () => { this.flagged = []; this.cdr.markForCheck(); }
     });
   }
 
@@ -53,8 +53,8 @@ export class ComplianceManagementComponent implements OnInit {
     if (this.evalForm.invalid) { this.evalForm.markAllAsTouched(); return; }
     const payload = { ...this.evalForm.value, requestedBy: Number(this.authSvc.getUserId()) };
     this.complianceSvc.evaluateFull(payload as any).subscribe({
-      next: r => { this.evalResult = r.data; this.toastr.success('Evaluation complete.'); },
-      error: () => this.toastr.error('Evaluation failed.')
+      next: r => { this.evalResult = r.data; this.toastr.success('Evaluation complete.'); this.cdr.markForCheck(); },
+      error: () => { this.toastr.error('Evaluation failed.'); this.cdr.markForCheck(); }
     });
   }
 
@@ -65,8 +65,9 @@ export class ComplianceManagementComponent implements OnInit {
         if (r.data) this.all.unshift(r.data);
         this.toastr.success('Record created.');
         this.recordForm.reset({ entityType: 'CLAIM', result: 'PASS' });
+        this.cdr.markForCheck();
       },
-      error: () => this.toastr.error('Could not create record.')
+      error: () => { this.toastr.error('Could not create record.'); this.cdr.markForCheck(); }
     });
   }
 }

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
@@ -23,7 +23,8 @@ export class ManagerDashboardComponent implements OnInit {
   constructor(
     private schemeSvc: SchemeService,
     private complianceSvc: ComplianceService,
-    private auditMgmtSvc: AuditManagementService
+    private auditMgmtSvc: AuditManagementService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
@@ -41,6 +42,7 @@ export class ManagerDashboardComponent implements OnInit {
       this.totalAudits = (audits.data ?? []).length;
       this.loading = false;
       this.refreshCards();
+      this.cdr.markForCheck();
     });
   }
 

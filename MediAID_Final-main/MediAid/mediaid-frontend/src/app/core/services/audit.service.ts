@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpContext } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { ApiResponse } from '../models/auth.models';
 import { AuditLog, AuditManagementLog, FormalAuditRequest, FormalAuditResponse, FormalAuditUpdate } from '../models/audit.models';
+import { SKIP_ERROR_TOAST } from '../interceptors/jwt.interceptor';
 
 @Injectable({ providedIn: 'root' })
 export class AuditService {
@@ -11,6 +12,11 @@ export class AuditService {
 
   getAll() { return this.http.get<ApiResponse<AuditLog[]>>(this.base); }
   getByUser(userId: number) { return this.http.get<ApiResponse<AuditLog[]>>(`${this.base}/${userId}`); }
+  getLatest100Logs() {
+    return this.http.get<ApiResponse<AuditLog[]>>(`${this.base}/latest`, {
+      context: new HttpContext().set(SKIP_ERROR_TOAST, true)
+    });
+  }
 }
 
 @Injectable({ providedIn: 'root' })
@@ -19,6 +25,11 @@ export class AuditManagementService {
   constructor(private http: HttpClient) {}
 
   getLogs() { return this.http.get<ApiResponse<AuditManagementLog[]>>(`${this.base}/logs`); }
+  getLatest100Logs() {
+    return this.http.get<ApiResponse<AuditManagementLog[]>>(`${this.base}/logs/latest`, {
+      context: new HttpContext().set(SKIP_ERROR_TOAST, true)
+    });
+  }
   getLogsByUser(userId: number) { return this.http.get<ApiResponse<AuditManagementLog[]>>(`${this.base}/logs/user/${userId}`); }
   getLogsByAction(action: string) { return this.http.get<ApiResponse<AuditManagementLog[]>>(`${this.base}/logs/action/${action}`); }
   getLogsByResource(fragment: string) { return this.http.get<ApiResponse<AuditManagementLog[]>>(`${this.base}/logs/resource/${fragment}`); }

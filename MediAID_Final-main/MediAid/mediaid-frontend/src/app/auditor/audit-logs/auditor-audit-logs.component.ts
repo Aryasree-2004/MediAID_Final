@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -8,66 +8,144 @@ import { MatTableModule } from '@angular/material/table';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { AuditManagementService } from '../../core/services/audit.service';
+import { MatTabsModule } from '@angular/material/tabs';
+import { ToastrService } from 'ngx-toastr';
+import { AuditManagementService, AuditService } from '../../core/services/audit.service';
 
 @Component({
   selector: 'app-auditor-audit-logs',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatCardModule, MatButtonModule, MatIconModule, MatTableModule, MatFormFieldModule, MatInputModule, MatProgressSpinnerModule],
+  imports: [
+    CommonModule, FormsModule,
+    MatCardModule, MatButtonModule, MatIconModule,
+    MatTableModule, MatFormFieldModule, MatInputModule,
+    MatProgressSpinnerModule, MatTabsModule
+  ],
   templateUrl: './auditor-audit-logs.component.html',
   styleUrl: './auditor-audit-logs.component.css'
 })
 export class AuditorAuditLogsComponent implements OnInit {
-  mgmtLogs: any[] = [];
-  mgmtLoading = true;
-  mgmtActionFilter = '';
-  mgmtResourceFilter = '';
-  mgmtCols = ['logId', 'userId', 'action', 'resource', 'details', 'timestamp'];
 
-  constructor(private auditMgmtSvc: AuditManagementService) {}
+  // ── Tab 1: Business Activity Logs (from audit-management-service) ──────────
+  businessLogs: any[] = [];
+  allBusinessLogs: any[] = [];
+  businessLoading = true;
+  businessActionFilter = '';
+  businessResourceFilter = '';
+  businessCols = ['logId', 'userId', 'action', 'resource', 'details', 'timestamp'];
 
-  ngOnInit() { this.loadMgmt(); }
+  // ── Tab 2: Identity & Access Logs (from audit-service) ────────────────────
+  identityLogs: any[] = [];
+  allIdentityLogs: any[] = [];
+  identityLoading = true;
+  identityActionFilter = '';
+  identityResourceFilter = '';
+  identityCols = ['auditId', 'userId', 'action', 'resource', 'details', 'timestamp'];
 
-  loadMgmt() {
-    this.mgmtLoading = true;
-    this.auditMgmtSvc.getLogs().subscribe({
-      next: r => { this.mgmtLoading = false; this.mgmtLogs = r.data ?? []; },
-      error: () => { this.mgmtLoading = false; this.mgmtLogs = []; }
-    });
+  accessDenied = false;
+
+  constructor(
+    private auditMgmtSvc: AuditManagementService,
+    private auditSvc: AuditService,
+    private toastr: ToastrService,
+    private cdr: ChangeDetectorRef
+  ) {}
+
+  ngOnInit() {
+    this.loadBusinessLogs();
+    this.loadIdentityLogs();
   }
 
-  // Backend exposes /logs/action/{action} and /logs/resource/{fragment}.
-  // Prefer server-side when one filter is set; both filters → client-side AND on the action result.
-  applyMgmtFilter() {
-    const a = this.mgmtActionFilter.trim();
-    const r = this.mgmtResourceFilter.trim();
+  // ── Business logs ─────────────────────────────────────────────────────────
 
-    if (!a && !r) { this.loadMgmt(); return; }
-
-    this.mgmtLoading = true;
-    const source$ = a
-      ? this.auditMgmtSvc.getLogsByAction(a)
-      : this.auditMgmtSvc.getLogsByResource(r);
-
-    source$.subscribe({
-      next: resp => {
-        this.mgmtLoading = false;
-        let rows = resp.data ?? [];
-        if (a && r) rows = rows.filter(l => (l.resource || '').toLowerCase().includes(r.toLowerCase()));
-        this.mgmtLogs = rows;
+  loadBusinessLogs() {
+    this.businessLoading = true;
+    this.auditMgmtSvc.getLatest100Logs().subscribe({
+      next: r => {
+        this.allBusinessLogs = r.data ?? [];
+        this.businessLogs = [...this.allBusinessLogs];
+        this.businessLoading = false;
+        this.cdr.markForCheck();
       },
-      error: () => { this.mgmtLoading = false; this.mgmtLogs = []; }
+      error: (err: any) => {
+        this.businessLoading = false;
+        if (err?.status === 403 || err?.status === 401) {
+          this.accessDenied = true;
+        } else {
+          this.toastr.error('Could not load business audit logs.');
+        }
+        this.cdr.markForCheck();
+      }
     });
   }
 
-  clearMgmt() { this.mgmtActionFilter = ''; this.mgmtResourceFilter = ''; this.loadMgmt(); }
+  applyBusinessFilter() {
+    const a = this.businessActionFilter.toLowerCase();
+    const r = this.businessResourceFilter.toLowerCase();
+    this.businessLogs = this.allBusinessLogs.filter(l =>
+      (!a || (l.action ?? '').toLowerCase().includes(a)) &&
+      (!r || (l.resource ?? '').toLowerCase().includes(r))
+    );
+    this.cdr.markForCheck();
+  }
 
-  exportCSV(data: any[], filename: string) {
+  clearBusinessFilter() {
+    this.businessActionFilter = '';
+    this.businessResourceFilter = '';
+    this.businessLogs = [...this.allBusinessLogs];
+    this.cdr.markForCheck();
+  }
+
+  exportBusinessCSV() {
+    this.downloadCSV(this.businessLogs, 'business-audit-logs.csv');
+  }
+
+  // ── Identity logs ─────────────────────────────────────────────────────────
+
+  loadIdentityLogs() {
+    this.identityLoading = true;
+    this.auditSvc.getLatest100Logs().subscribe({
+      next: r => {
+        this.allIdentityLogs = r.data ?? [];
+        this.identityLogs = [...this.allIdentityLogs];
+        this.identityLoading = false;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.identityLoading = false;
+        this.identityLogs = [];
+        this.toastr.warning('Identity logs unavailable.');
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  applyIdentityFilter() {
+    const a = this.identityActionFilter.toLowerCase();
+    const r = this.identityResourceFilter.toLowerCase();
+    this.identityLogs = this.allIdentityLogs.filter(l =>
+      (!a || (l.action ?? '').toLowerCase().includes(a)) &&
+      (!r || (l.resource ?? '').toLowerCase().includes(r))
+    );
+    this.cdr.markForCheck();
+  }
+
+  clearIdentityFilter() {
+    this.identityActionFilter = '';
+    this.identityResourceFilter = '';
+    this.identityLogs = [...this.allIdentityLogs];
+    this.cdr.markForCheck();
+  }
+
+  exportIdentityCSV() {
+    this.downloadCSV(this.identityLogs, 'identity-audit-logs.csv');
+  }
+
+  // ── Shared CSV helper ─────────────────────────────────────────────────────
+
+  private downloadCSV(data: any[], filename: string) {
     if (!data.length) return;
-    const escape = (v: any) => {
-      const s = v === null || v === undefined ? '' : String(v);
-      return `"${s.replace(/"/g, '""')}"`;
-    };
+    const escape = (v: any) => `"${String(v ?? '').replace(/"/g, '""')}"`;
     const headers = Object.keys(data[0]).map(escape).join(',');
     const rows = data.map(row => Object.values(row).map(escape).join(','));
     const csv = [headers, ...rows].join('\r\n');

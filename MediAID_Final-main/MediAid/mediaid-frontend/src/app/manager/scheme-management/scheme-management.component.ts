@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
@@ -43,15 +43,15 @@ export class SchemeManagementComponent implements OnInit {
     status: ['ACTIVE', Validators.required]
   });
 
-  constructor(private schemeSvc: SchemeService, private toastr: ToastrService, private dialog: MatDialog) {}
+  constructor(private schemeSvc: SchemeService, private toastr: ToastrService, private dialog: MatDialog, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() { this.load(); }
 
   load() {
     this.loading = true;
     this.schemeSvc.getAll().subscribe({
-      next: r => { this.loading = false; this.schemes = r.data ?? []; this.applyFilter(); },
-      error: () => { this.loading = false; this.toastr.error('Could not load schemes.'); }
+      next: r => { this.loading = false; this.schemes = r.data ?? []; this.applyFilter(); this.cdr.markForCheck(); },
+      error: () => { this.loading = false; this.toastr.error('Could not load schemes.'); this.cdr.markForCheck(); }
     });
   }
 
@@ -71,8 +71,9 @@ export class SchemeManagementComponent implements OnInit {
         this.showForm = false;
         this.schemeForm.reset({ validityYears: 1, status: 'ACTIVE' });
         this.load();
+        this.cdr.markForCheck();
       },
-      error: () => this.toastr.error('Could not create scheme.')
+      error: () => { this.toastr.error('Could not create scheme.'); this.cdr.markForCheck(); }
     });
   }
 
@@ -82,8 +83,9 @@ export class SchemeManagementComponent implements OnInit {
       next: r => {
         if (r.data) s.status = r.data.status;
         this.toastr.success(`Scheme ${newStatus.toLowerCase()}.`);
+        this.cdr.markForCheck();
       },
-      error: () => this.toastr.error('Could not update scheme status.')
+      error: () => { this.toastr.error('Could not update scheme status.'); this.cdr.markForCheck(); }
     });
   }
 
@@ -92,8 +94,8 @@ export class SchemeManagementComponent implements OnInit {
     ref.afterClosed().subscribe(confirmed => {
       if (!confirmed) return;
       this.schemeSvc.delete(s.schemeId).subscribe({
-        next: () => { this.toastr.success('Scheme deleted.'); this.load(); },
-        error: () => this.toastr.error('Could not delete scheme.')
+        next: () => { this.toastr.success('Scheme deleted.'); this.load(); this.cdr.markForCheck(); },
+        error: () => { this.toastr.error('Could not delete scheme.'); this.cdr.markForCheck(); }
       });
     });
   }

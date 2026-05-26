@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
@@ -27,23 +27,23 @@ export class AuditorComplianceComponent implements OnInit {
   loading = true;
   cols = ['complianceId', 'entityId', 'entityType', 'result', 'notes', 'evaluatedAt'];
 
-  constructor(private complianceSvc: ComplianceService, private toastr: ToastrService) {}
+  constructor(private complianceSvc: ComplianceService, private toastr: ToastrService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() { this.loadAll(); }
 
   loadAll() {
     this.loading = true;
     this.complianceSvc.getAll().subscribe({
-      next: r => { this.loading = false; this.all = r.data ?? []; },
-      error: () => { this.loading = false; this.toastr.error('Could not load compliance records.'); }
+      next: r => { this.loading = false; this.all = r.data ?? []; this.cdr.markForCheck(); },
+      error: () => { this.loading = false; this.toastr.error('Could not load compliance records.'); this.cdr.markForCheck(); }
     });
     this.complianceSvc.getViolations().subscribe({
-      next: r => { this.violations = r.data ?? []; },
-      error: () => { this.violations = []; }
+      next: r => { this.violations = r.data ?? []; this.cdr.markForCheck(); },
+      error: () => { this.violations = []; this.cdr.markForCheck(); }
     });
     this.complianceSvc.getFlagged().subscribe({
-      next: r => { this.flagged = r.data ?? []; },
-      error: () => { this.flagged = []; }
+      next: r => { this.flagged = r.data ?? []; this.cdr.markForCheck(); },
+      error: () => { this.flagged = []; this.cdr.markForCheck(); }
     });
   }
 }
